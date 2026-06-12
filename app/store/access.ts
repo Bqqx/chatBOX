@@ -78,9 +78,9 @@ const DEFAULT_ACCESS_STATE = {
   imageApiKey: "",
   imageModel: "gpt-image-1",
   imageEngine: "Nanobanana",
-  imageNanoModel: "[Rim] gemini-3-pro-image-preview",
+  imageNanoModel: "「Rim」gemini-3-pro-image-preview",
   imageChatGPTModel: "gpt-image-2",
-  imageNanoModels: ["[Rim] gemini-3-pro-image-preview"],
+  imageNanoModels: ["「Rim」gemini-3-pro-image-preview"],
   imageChatGPTModels: ["gpt-image-2"],
 
   // openai
@@ -309,7 +309,7 @@ export const useAccessStore = createPersistStore(
   }),
   {
     name: StoreKey.Access,
-    version: 2,
+    version: 3,
     migrate(persistedState, version) {
       if (version < 2) {
         const state = persistedState as {
@@ -320,6 +320,24 @@ export const useAccessStore = createPersistStore(
         };
         state.openaiApiKey = state.token;
         state.azureApiVersion = "2023-08-01-preview";
+      }
+
+      const state = persistedState as {
+        imageNanoModel?: string;
+        imageNanoModels?: string[];
+      };
+      const normalizeNanoModel = (model: string) =>
+        model === "[Rim] gemini-3-pro-image-preview"
+          ? "「Rim」gemini-3-pro-image-preview"
+          : model;
+
+      if (state.imageNanoModel) {
+        state.imageNanoModel = normalizeNanoModel(state.imageNanoModel);
+      }
+      if (Array.isArray(state.imageNanoModels)) {
+        state.imageNanoModels = Array.from(
+          new Set(state.imageNanoModels.map(normalizeNanoModel)),
+        );
       }
 
       return persistedState as any;

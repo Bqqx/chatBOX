@@ -72,6 +72,7 @@ export const useImageChatStore = createPersistStore(
       },
 
       selectSession(index: number) {
+        if (index === get().currentSessionIndex) return;
         set({ currentSessionIndex: index });
       },
 
@@ -186,14 +187,26 @@ export const useImageChatStore = createPersistStore(
         updater: (message: ImageChatMessage) => void,
       ) {
         const sessions = get().sessions;
-        const session = sessions.find((item) => item.id === sessionId);
-        const message = session?.messages.find((item) => item.id === messageId);
+        const sessionIndex = sessions.findIndex(
+          (item) => item.id === sessionId,
+        );
+        const session = sessions[sessionIndex];
+        const messageIndex =
+          session?.messages.findIndex((item) => item.id === messageId) ?? -1;
 
-        if (!session || !message) return;
+        if (!session || messageIndex < 0) return;
 
+        const message = { ...session.messages[messageIndex] };
         updater(message);
-        session.lastUpdate = Date.now();
-        set(() => ({ sessions }));
+        const messages = [...session.messages];
+        messages[messageIndex] = message;
+        const nextSessions = [...sessions];
+        nextSessions[sessionIndex] = {
+          ...session,
+          messages,
+          lastUpdate: Date.now(),
+        };
+        set(() => ({ sessions: nextSessions }));
       },
 
       updateTargetSession(
@@ -203,8 +216,11 @@ export const useImageChatStore = createPersistStore(
         const sessions = get().sessions;
         const index = sessions.findIndex((s) => s.id === targetSession.id);
         if (index < 0) return;
-        updater(sessions[index]);
-        set(() => ({ sessions }));
+        const nextSession = { ...sessions[index] };
+        updater(nextSession);
+        const nextSessions = [...sessions];
+        nextSessions[index] = nextSession;
+        set(() => ({ sessions: nextSessions }));
       },
     };
 

@@ -95,7 +95,7 @@ type ImageEngine = (typeof IMAGE_ENGINE_OPTIONS)[number];
 
 function getDefaultImageModel(engine: ImageEngine) {
   return engine === "Nanobanana"
-    ? "[Rim] gemini-3-pro-image-preview"
+    ? "「Rim」gemini-3-pro-image-preview"
     : "gpt-image-2";
 }
 

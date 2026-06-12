@@ -323,40 +323,16 @@ function normalizeImageSources(images: string[]) {
   );
 }
 
-function shouldConvertToPng(image: string) {
-  return /^data:image\/(jpeg|jpg|jfif|webp);base64,/i.test(image);
-}
-
-async function convertDataImageToPng(image: string) {
-  if (!shouldConvertToPng(image)) return image;
-
-  return new Promise<string>((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.naturalWidth || img.width;
-      canvas.height = img.naturalHeight || img.height;
-      const ctx = canvas.getContext("2d");
-      if (!ctx || !canvas.width || !canvas.height) {
-        resolve(image);
-        return;
-      }
-      ctx.drawImage(img, 0, 0);
-      resolve(canvas.toDataURL("image/png"));
-    };
-    img.onerror = () => resolve(image);
-    img.src = image;
-  });
-}
-
 async function normalizeImagesForDisplay(images: string[]) {
-  const normalized = normalizeImageSources(images);
-  return normalizeImageSources(
-    await Promise.all(normalized.map(convertDataImageToPng)),
-  );
+  return normalizeImageSources(images);
 }
+
+const imageBlobUrlCache = new Map<string, string>();
 
 function dataUrlToBlobUrl(dataUrl: string) {
+  const cachedUrl = imageBlobUrlCache.get(dataUrl);
+  if (cachedUrl) return cachedUrl;
+
   const [header, base64] = dataUrl.split(",", 2);
   const mimeType = header.match(/^data:([^;]+);base64$/)?.[1] ?? "image/png";
   const binary = window.atob(base64);
@@ -365,7 +341,9 @@ function dataUrlToBlobUrl(dataUrl: string) {
     bytes[i] = binary.charCodeAt(i);
   }
 
-  return URL.createObjectURL(new Blob([bytes], { type: mimeType }));
+  const blobUrl = URL.createObjectURL(new Blob([bytes], { type: mimeType }));
+  imageBlobUrlCache.set(dataUrl, blobUrl);
+  return blobUrl;
 }
 
 function ImageResult(props: { image: string }) {
@@ -378,9 +356,17 @@ function ImageResult(props: { image: string }) {
       return;
     }
 
-    const blobUrl = dataUrlToBlobUrl(image);
-    setImageUrl(blobUrl);
-    return () => URL.revokeObjectURL(blobUrl);
+    setImageUrl(image);
+    const buildBlobUrl = () => setImageUrl(dataUrlToBlobUrl(image));
+    if ("requestIdleCallback" in window) {
+      const idleId = window.requestIdleCallback(buildBlobUrl, {
+        timeout: 1200,
+      });
+      return () => window.cancelIdleCallback(idleId);
+    }
+
+    const timer = globalThis.setTimeout(buildBlobUrl, 0);
+    return () => globalThis.clearTimeout(timer);
   }, [image]);
 
   return (
@@ -411,71 +397,44 @@ function ModelSelector(props: {
   onAdd: (model: string) => void;
   onDelete: (model: string) => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const [newModel, setNewModel] = useState("");
-
   function addModel() {
-    const model = newModel.trim();
+    const model = window.prompt("请输入中转模型名", "")?.trim() ?? "";
     if (!model) return;
     props.onAdd(model);
-    setNewModel("");
-    setOpen(false);
   }
 
   return (
     <div className={styles["model-selector"]}>
+      <select
+        aria-label="中转模型名"
+        value={props.value || props.placeholder}
+        onChange={(event) => props.onSelect(event.currentTarget.value)}
+      >
+        {props.options.map((model) => (
+          <option key={model} value={model}>
+            {model}
+          </option>
+        ))}
+      </select>
       <button
         type="button"
-        className={styles["model-selector-trigger"]}
-        onClick={() => setOpen((value) => !value)}
+        className={styles["model-selector-action"]}
+        aria-label="新增模型"
+        title="新增模型"
+        onClick={addModel}
       >
-        <span>{props.value || props.placeholder}</span>
-        <span className={styles["model-selector-arrow"]}>v</span>
+        +
       </button>
-
-      {open && (
-        <div className={styles["model-selector-menu"]}>
-          {props.options.map((model) => (
-            <div className={styles["model-selector-item"]} key={model}>
-              <button
-                type="button"
-                className={styles["model-selector-name"]}
-                onClick={() => {
-                  props.onSelect(model);
-                  setOpen(false);
-                }}
-              >
-                {model}
-              </button>
-              <button
-                type="button"
-                className={styles["model-selector-delete"]}
-                onClick={() => props.onDelete(model)}
-                aria-label={`删除 ${model}`}
-              >
-                x
-              </button>
-            </div>
-          ))}
-
-          <div className={styles["model-selector-add"]}>
-            <input
-              value={newModel}
-              placeholder="新增模型名"
-              onChange={(event) => setNewModel(event.currentTarget.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  addModel();
-                }
-              }}
-            />
-            <button type="button" onClick={addModel} aria-label="新增模型">
-              +
-            </button>
-          </div>
-        </div>
-      )}
+      <button
+        type="button"
+        className={styles["model-selector-action"]}
+        aria-label="删除当前模型"
+        title="删除当前模型"
+        onClick={() => props.onDelete(props.value)}
+        disabled={props.options.length <= 1 || !props.value}
+      >
+        ×
+      </button>
     </div>
   );
 }
@@ -1142,7 +1101,7 @@ export function ImageChat() {
           <div className={chatStyles["chat-input-panel"]}>
             <div className={styles["image-options"]}>
               <label className={styles.option}>
-                <span>鐢熷浘绫诲瀷</span>
+                <span>生图类型</span>
                 <select
                   value={engine}
                   onChange={(e) =>
@@ -1156,7 +1115,7 @@ export function ImageChat() {
                   ))}
                 </select>
               </label>
-              <label className={styles.option}>
+              <div className={styles.option}>
                 <span>中转模型名</span>
                 <ModelSelector
                   value={model}
@@ -1166,7 +1125,7 @@ export function ImageChat() {
                   onAdd={addModelOption}
                   onDelete={deleteModelOption}
                 />
-              </label>
+              </div>
               <label className={styles.option}>
                 <span>{Locale.ImageChat.Size}</span>
                 <select
