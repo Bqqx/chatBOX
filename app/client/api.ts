@@ -2,6 +2,7 @@ import { getClientConfig } from "../config/client";
 import {
   ACCESS_CODE_PREFIX,
   ModelProvider,
+  OpenaiPath,
   ServiceProvider,
 } from "../constant";
 import {
@@ -241,6 +242,47 @@ export function validString(x: string): boolean {
   return x?.length > 0;
 }
 
+export function normalizeApiBaseUrl(baseUrl: string): string {
+  let url = baseUrl.trim().replace(/\/+$/, "");
+  if (url && !url.startsWith("http") && !url.startsWith("/api/")) {
+    url = `https://${url}`;
+  }
+  return url;
+}
+
+export function resolveCustomOpenAIEndpoint(baseUrl: string, path: string) {
+  const normalizedBaseUrl = normalizeApiBaseUrl(baseUrl);
+  let normalizedPath = path.replace(/^\/+/, "");
+  const lowerBaseUrl = normalizedBaseUrl.toLowerCase();
+
+  if (lowerBaseUrl.endsWith("/v1") && normalizedPath.startsWith("v1/")) {
+    normalizedPath = normalizedPath.slice(3);
+  } else if (
+    lowerBaseUrl.endsWith("/chat/completions") &&
+    normalizedPath === OpenaiPath.ChatPath
+  ) {
+    normalizedPath = "";
+  } else if (
+    lowerBaseUrl.endsWith("/images/generations") &&
+    normalizedPath === OpenaiPath.ImagePath
+  ) {
+    normalizedPath = "";
+  } else if (
+    lowerBaseUrl.endsWith("/models") &&
+    normalizedPath === OpenaiPath.ListModelPath
+  ) {
+    normalizedPath = "";
+  }
+
+  return {
+    baseUrl: normalizedBaseUrl,
+    path: normalizedPath,
+    url: normalizedPath
+      ? `${normalizedBaseUrl}/${normalizedPath}`
+      : normalizedBaseUrl,
+  };
+}
+
 export function getHeaders(ignoreHeaders: boolean = false) {
   const accessStore = useAccessStore.getState();
   const chatStore = useChatStore.getState();
@@ -270,8 +312,13 @@ export function getHeaders(ignoreHeaders: boolean = false) {
     const isSiliconFlow =
       modelConfig.providerName === ServiceProvider.SiliconFlow;
     const isAI302 = modelConfig.providerName === ServiceProvider["302.AI"];
+    const isCustom =
+      accessStore.useCustomConfig &&
+      accessStore.provider === ServiceProvider.Custom;
     const isEnabledAccessControl = accessStore.enabledAccessControl();
-    const apiKey = isGoogle
+    const apiKey = isCustom
+      ? accessStore.customApiKey
+      : isGoogle
       ? accessStore.googleApiKey
       : isAzure
       ? accessStore.azureApiKey
@@ -312,6 +359,7 @@ export function getHeaders(ignoreHeaders: boolean = false) {
       isChatGLM,
       isSiliconFlow,
       isAI302,
+      isCustom,
       apiKey,
       isEnabledAccessControl,
     };
@@ -341,6 +389,7 @@ export function getHeaders(ignoreHeaders: boolean = false) {
     isChatGLM,
     isSiliconFlow,
     isAI302,
+    isCustom,
     apiKey,
     isEnabledAccessControl,
   } = getConfig();
@@ -360,6 +409,20 @@ export function getHeaders(ignoreHeaders: boolean = false) {
     headers["Authorization"] = getBearerToken(
       ACCESS_CODE_PREFIX + accessStore.accessCode,
     );
+  }
+
+  const modelConfig = chatStore.currentSession().mask.modelConfig;
+  const shouldProxyCustomOpenAI =
+    accessStore.useCustomConfig &&
+    !clientConfig?.isApp &&
+    accessStore.provider === ServiceProvider.OpenAI &&
+    validString(accessStore.openaiUrl) &&
+    normalizeApiBaseUrl(accessStore.openaiUrl).startsWith("http");
+
+  if (isCustom && !clientConfig?.isApp && validString(accessStore.customUrl)) {
+    headers["x-base-url"] = normalizeApiBaseUrl(accessStore.customUrl);
+  } else if (shouldProxyCustomOpenAI) {
+    headers["x-base-url"] = normalizeApiBaseUrl(accessStore.openaiUrl);
   }
 
   return headers;

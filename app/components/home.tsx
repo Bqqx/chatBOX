@@ -75,6 +75,13 @@ const Sd = dynamic(async () => (await import("./sd")).Sd, {
   loading: () => <Loading noLogo />,
 });
 
+const ImageChat = dynamic(
+  async () => (await import("./image-chat")).ImageChat,
+  {
+    loading: () => <Loading noLogo />,
+  },
+);
+
 const McpMarketPage = dynamic(
   async () => (await import("./mcp-market")).McpMarketPage,
   {
@@ -183,7 +190,7 @@ function Screen() {
   }
   const renderContent = () => {
     if (isAuth) return <AuthPage />;
-    if (isSd) return <Sd />;
+    if (isSd) return <ImageChat />;
     if (isSdNew) return <Sd />;
     return (
       <>

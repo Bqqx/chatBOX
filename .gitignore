@@ -24,6 +24,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+nextchat-dev*.log
+debug-*.png
+fixed-*.png
+nextchat-*.png
 
 # local env files
 .env*.local

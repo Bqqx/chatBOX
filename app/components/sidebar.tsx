@@ -11,11 +11,12 @@ import DeleteIcon from "../icons/delete.svg";
 import MaskIcon from "../icons/mask.svg";
 import McpIcon from "../icons/mcp.svg";
 import DragIcon from "../icons/drag.svg";
-import DiscoveryIcon from "../icons/discovery.svg";
+import ImageIcon from "../icons/image.svg";
+import ChatIcon from "../icons/chat.svg";
 
 import Locale from "../locales";
 
-import { useAppConfig, useChatStore } from "../store";
+import { useAppConfig, useChatStore, useImageChatStore } from "../store";
 
 import {
   DEFAULT_SIDEBAR_WIDTH,
@@ -29,30 +30,39 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { isIOS, useMobileScreen } from "../utils";
 import dynamic from "next/dynamic";
-import { Selector, showConfirm } from "./ui-lib";
+import { showConfirm } from "./ui-lib";
 import clsx from "clsx";
 import { isMcpEnabled } from "../mcp/actions";
-
-const DISCOVERY = [
-  { name: Locale.Plugin.Name, path: Path.Plugins },
-  { name: "Stable Diffusion", path: Path.Sd },
-  { name: Locale.SearchChat.Page.Title, path: Path.SearchChat },
-];
 
 const ChatList = dynamic(async () => (await import("./chat-list")).ChatList, {
   loading: () => null,
 });
+const ImageChatList = dynamic(
+  async () => (await import("./chat-list")).ImageChatList,
+  {
+    loading: () => null,
+  },
+);
 
-export function useHotKey() {
+export function useHotKey(mode: "chat" | "image" = "chat") {
   const chatStore = useChatStore();
+  const imageChatStore = useImageChatStore();
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.altKey || e.ctrlKey) {
         if (e.key === "ArrowUp") {
-          chatStore.nextSession(-1);
+          if (mode === "chat") {
+            chatStore.nextSession(-1);
+          } else {
+            imageChatStore.nextSession(-1);
+          }
         } else if (e.key === "ArrowDown") {
-          chatStore.nextSession(1);
+          if (mode === "chat") {
+            chatStore.nextSession(1);
+          } else {
+            imageChatStore.nextSession(1);
+          }
         }
       }
     };
@@ -224,13 +234,17 @@ export function SideBarTail(props: {
   );
 }
 
-export function SideBar(props: { className?: string }) {
-  useHotKey();
+export function SideBar(props: {
+  className?: string;
+  mode?: "chat" | "image";
+}) {
+  const mode = props.mode ?? "chat";
+  useHotKey(mode);
   const { onDragStart, shouldNarrow } = useDragSideBar();
-  const [showDiscoverySelector, setshowDiscoverySelector] = useState(false);
   const navigate = useNavigate();
   const config = useAppConfig();
   const chatStore = useChatStore();
+  const imageChatStore = useImageChatStore();
   const [mcpEnabled, setMcpEnabled] = useState(false);
 
   useEffect(() => {
@@ -247,7 +261,7 @@ export function SideBar(props: { className?: string }) {
     <SideBarContainer
       onDragStart={onDragStart}
       shouldNarrow={shouldNarrow}
-      {...props}
+      className={props.className}
     >
       <SideBarHeader
         title="NextChat"
@@ -281,38 +295,37 @@ export function SideBar(props: { className?: string }) {
             />
           )}
           <IconButton
-            icon={<DiscoveryIcon />}
-            text={shouldNarrow ? undefined : Locale.Discovery.Name}
+            icon={<ChatIcon />}
+            text={shouldNarrow ? undefined : Locale.ImageChat.ChatName}
             className={styles["sidebar-bar-button"]}
-            onClick={() => setshowDiscoverySelector(true)}
+            onClick={() => {
+              navigate(Path.Chat, { state: { fromHome: true } });
+            }}
+            shadow
+          />
+          <IconButton
+            icon={<ImageIcon />}
+            text={shouldNarrow ? undefined : Locale.ImageChat.Name}
+            className={styles["sidebar-bar-button"]}
+            onClick={() => {
+              navigate(Path.Sd, { state: { fromHome: true } });
+            }}
             shadow
           />
         </div>
-        {showDiscoverySelector && (
-          <Selector
-            items={[
-              ...DISCOVERY.map((item) => {
-                return {
-                  title: item.name,
-                  value: item.path,
-                };
-              }),
-            ]}
-            onClose={() => setshowDiscoverySelector(false)}
-            onSelection={(s) => {
-              navigate(s[0], { state: { fromHome: true } });
-            }}
-          />
-        )}
       </SideBarHeader>
       <SideBarBody
         onClick={(e) => {
           if (e.target === e.currentTarget) {
-            navigate(Path.Home);
+            navigate(mode === "image" ? Path.Sd : Path.Home);
           }
         }}
       >
-        <ChatList narrow={shouldNarrow} />
+        {mode === "image" ? (
+          <ImageChatList narrow={shouldNarrow} />
+        ) : (
+          <ChatList narrow={shouldNarrow} />
+        )}
       </SideBarBody>
       <SideBarTail
         primaryAction={
@@ -322,7 +335,13 @@ export function SideBar(props: { className?: string }) {
                 icon={<DeleteIcon />}
                 onClick={async () => {
                   if (await showConfirm(Locale.Home.DeleteChat)) {
-                    chatStore.deleteSession(chatStore.currentSessionIndex);
+                    if (mode === "image") {
+                      imageChatStore.deleteSession(
+                        imageChatStore.currentSessionIndex,
+                      );
+                    } else {
+                      chatStore.deleteSession(chatStore.currentSessionIndex);
+                    }
                   }
                 }}
               />
@@ -350,9 +369,18 @@ export function SideBar(props: { className?: string }) {
         secondaryAction={
           <IconButton
             icon={<AddIcon />}
-            text={shouldNarrow ? undefined : Locale.Home.NewChat}
+            text={
+              shouldNarrow
+                ? undefined
+                : mode === "image"
+                ? Locale.ImageChat.NewChat
+                : Locale.Home.NewChat
+            }
             onClick={() => {
-              if (config.dontShowMaskSplashScreen) {
+              if (mode === "image") {
+                imageChatStore.newSession();
+                navigate(Path.Sd);
+              } else if (config.dontShowMaskSplashScreen) {
                 chatStore.newSession();
                 navigate(Path.Chat);
               } else {

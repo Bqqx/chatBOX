@@ -1,6 +1,11 @@
 "use client";
 // azure and openai, using same models. so using same LLMApi.
-import { ApiPath, DEEPSEEK_BASE_URL, DeepSeek } from "@/app/constant";
+import {
+  ApiPath,
+  DEEPSEEK_BASE_URL,
+  DeepSeek,
+  DEFAULT_MODELS,
+} from "@/app/constant";
 import {
   useAccessStore,
   useAppConfig,
@@ -248,6 +253,6 @@ export class DeepSeekApi implements LLMApi {
   }
 
   async models(): Promise<LLMModel[]> {
-    return [];
+    return DEFAULT_MODELS.slice();
   }
 }

@@ -90,6 +90,15 @@ import { ProviderType } from "../utils/cloud";
 import { TTSConfigList } from "./tts-config";
 import { RealtimeConfigList } from "./realtime-chat/realtime-config";
 
+const IMAGE_ENGINE_OPTIONS = ["Nanobanana", "ChatGPT"] as const;
+type ImageEngine = (typeof IMAGE_ENGINE_OPTIONS)[number];
+
+function getDefaultImageModel(engine: ImageEngine) {
+  return engine === "Nanobanana"
+    ? "[Rim] gemini-3-pro-image-preview"
+    : "gpt-image-2";
+}
+
 function EditPromptModal(props: { id: string; onClose: () => void }) {
   const promptStore = usePromptStore();
   const prompt = promptStore.get(props.id);
@@ -611,7 +620,8 @@ export function Settings() {
     return (
       accessStore.hideBalanceQuery ||
       isOpenAiUrl ||
-      accessStore.provider === ServiceProvider.Azure
+      accessStore.provider === ServiceProvider.Azure ||
+      accessStore.provider === ServiceProvider.Custom
     );
   }, [
     accessStore.hideBalanceQuery,
@@ -737,6 +747,45 @@ export function Settings() {
         ></input>
       </ListItem>
     );
+
+  const customConfigComponent = accessStore.provider ===
+    ServiceProvider.Custom && (
+    <>
+      <ListItem
+        title={Locale.Settings.Access.Custom.Endpoint.Title}
+        subTitle={Locale.Settings.Access.Custom.Endpoint.SubTitle}
+      >
+        <input
+          aria-label={Locale.Settings.Access.Custom.Endpoint.Title}
+          type="text"
+          value={accessStore.customUrl}
+          placeholder=""
+          onChange={(e) =>
+            accessStore.update(
+              (access) => (access.customUrl = e.currentTarget.value),
+            )
+          }
+        ></input>
+      </ListItem>
+      <ListItem
+        title={Locale.Settings.Access.Custom.ApiKey.Title}
+        subTitle={Locale.Settings.Access.Custom.ApiKey.SubTitle}
+      >
+        <PasswordInput
+          aria={Locale.Settings.ShowPassword}
+          aria-label={Locale.Settings.Access.Custom.ApiKey.Title}
+          value={accessStore.customApiKey}
+          type="text"
+          placeholder={Locale.Settings.Access.Custom.ApiKey.Placeholder}
+          onChange={(e) => {
+            accessStore.update(
+              (access) => (access.customApiKey = e.currentTarget.value),
+            );
+          }}
+        />
+      </ListItem>
+    </>
+  );
 
   const openAIConfigComponent = accessStore.provider ===
     ServiceProvider.OpenAI && (
@@ -1842,12 +1891,13 @@ export function Settings() {
                     >
                       {Object.entries(ServiceProvider).map(([k, v]) => (
                         <option value={v} key={k}>
-                          {k}
+                          {v === ServiceProvider.Custom ? "自定义" : k}
                         </option>
                       ))}
                     </Select>
                   </ListItem>
 
+                  {customConfigComponent}
                   {openAIConfigComponent}
                   {azureConfigComponent}
                   {googleConfigComponent}
@@ -1913,9 +1963,7 @@ export function Settings() {
               }
             ></input>
           </ListItem>
-        </List>
 
-        <List>
           <ModelConfigList
             modelConfig={config.modelConfig}
             updateConfig={(updater) => {
@@ -1924,6 +1972,95 @@ export function Settings() {
               config.update((config) => (config.modelConfig = modelConfig));
             }}
           />
+        </List>
+
+        <List>
+          <ListItem
+            title={Locale.ImageChat.Settings.Title}
+            subTitle={Locale.ImageChat.Settings.SubTitle}
+          >
+            <input
+              aria-label={Locale.ImageChat.Settings.Title}
+              type="checkbox"
+              checked={accessStore.imageUseCustomConfig}
+              onChange={(e) =>
+                accessStore.update(
+                  (access) =>
+                    (access.imageUseCustomConfig =
+                      e.currentTarget.checked),
+                )
+              }
+            ></input>
+          </ListItem>
+
+          {accessStore.imageUseCustomConfig && (
+            <>
+              <ListItem
+                title={Locale.ImageChat.Settings.Endpoint.Title}
+                subTitle={Locale.ImageChat.Settings.Endpoint.SubTitle}
+              >
+                <input
+                  aria-label={Locale.ImageChat.Settings.Endpoint.Title}
+                  type="text"
+                  value={accessStore.imageUrl}
+                  placeholder=""
+                  onChange={(e) =>
+                    accessStore.update(
+                      (access) => (access.imageUrl = e.currentTarget.value),
+                    )
+                  }
+                ></input>
+              </ListItem>
+              <ListItem
+                title={Locale.ImageChat.Settings.ApiKey.Title}
+                subTitle={Locale.ImageChat.Settings.ApiKey.SubTitle}
+              >
+                <PasswordInput
+                  aria={Locale.Settings.ShowPassword}
+                  aria-label={Locale.ImageChat.Settings.ApiKey.Title}
+                  value={accessStore.imageApiKey}
+                  type="text"
+                  placeholder={Locale.ImageChat.Settings.ApiKey.Placeholder}
+                  onChange={(e) => {
+                    accessStore.update(
+                      (access) =>
+                        (access.imageApiKey = e.currentTarget.value),
+                    );
+                  }}
+                />
+              </ListItem>
+              <ListItem title="生图类型" subTitle="选择当前默认使用的生图接口格式">
+                <Select
+                  aria-label="生图类型"
+                  value={
+                    IMAGE_ENGINE_OPTIONS.includes(
+                      accessStore.imageEngine as ImageEngine,
+                    )
+                      ? accessStore.imageEngine
+                      : "Nanobanana"
+                  }
+                  onChange={(e) => {
+                    const nextEngine = e.currentTarget.value as ImageEngine;
+                    accessStore.update((access) => {
+                      const nextModel =
+                        (nextEngine === "Nanobanana"
+                          ? access.imageNanoModel
+                          : access.imageChatGPTModel) ||
+                        getDefaultImageModel(nextEngine);
+                      access.imageEngine = nextEngine;
+                      access.imageModel = nextModel;
+                    });
+                  }}
+                >
+                  {IMAGE_ENGINE_OPTIONS.map((engine) => (
+                    <option key={engine} value={engine}>
+                      {engine}
+                    </option>
+                  ))}
+                </Select>
+              </ListItem>
+            </>
+          )}
         </List>
 
         {shouldShowPromptModal && (

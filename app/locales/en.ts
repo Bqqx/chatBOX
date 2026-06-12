@@ -335,6 +335,17 @@ const en: LocaleType = {
         Title: "Model Provider",
         SubTitle: "Select Azure or OpenAI",
       },
+      Custom: {
+        ApiKey: {
+          Title: "API Key",
+          SubTitle: "Use custom relay API key",
+          Placeholder: "Relay API Key",
+        },
+        Endpoint: {
+          Title: "Endpoint Address",
+          SubTitle: "Enter your relay API address. It must include http(s)://",
+        },
+      },
       OpenAI: {
         ApiKey: {
           Title: "OpenAI API Key",
@@ -668,6 +679,45 @@ const en: LocaleType = {
   },
   Discovery: {
     Name: "Discovery",
+  },
+  ImageChat: {
+    Name: "Image",
+    ChatName: "Chat",
+    NewChat: "New Image",
+    Title: "Image",
+    SubTitle: "Send a prompt to generate images",
+    Empty: "Send a prompt and generated images will appear here.",
+    Prompt: "Describe the image you want",
+    Send: "Generate",
+    Model: "Image model",
+    Size: "Aspect Ratio",
+    Count: "Count",
+    NeedCustomRelay:
+      "Please enable Image API Settings, then fill in the image relay endpoint and API key.",
+    Generating: "Generating image...",
+    Error: "Generation failed",
+    Settings: {
+      Title: "Image API Settings",
+      SubTitle: "Relay endpoint and key used only for image generation",
+      Enable: {
+        Title: "Enable image custom endpoint",
+        SubTitle: "Use the dedicated API settings below for image generation",
+      },
+      Endpoint: {
+        Title: "Image endpoint",
+        SubTitle:
+          "Enter an image-generation relay API URL, including http(s)://",
+      },
+      ApiKey: {
+        Title: "Image API Key",
+        SubTitle: "Only used for image requests, independent from chat",
+        Placeholder: "Image relay API Key",
+      },
+      Model: {
+        Title: "Default image model",
+        SubTitle: "The image prompt box uses this model by default",
+      },
+    },
   },
   Mcp: {
     Name: "MCP",

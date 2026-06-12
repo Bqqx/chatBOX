@@ -89,6 +89,7 @@ export enum FileName {
 
 export enum StoreKey {
   Chat = "chat-next-web-store",
+  ImageChat = "image-chat-store",
   Plugin = "chat-next-web-plugin",
   Access = "access-control",
   Config = "app-config",
@@ -120,6 +121,7 @@ export const EXPORT_MESSAGE_CLASS_NAME = "export-markdown";
 export enum ServiceProvider {
   OpenAI = "OpenAI",
   Azure = "Azure",
+  Custom = "Custom",
   Google = "Google",
   Anthropic = "Anthropic",
   Baidu = "Baidu",
@@ -650,7 +652,13 @@ const iflytekModels = [
   "4.0Ultra",
 ];
 
-const deepseekModels = ["deepseek-chat", "deepseek-coder", "deepseek-reasoner"];
+const deepseekModels = [
+  "deepseek-v4-pro",
+  "deepseek-v4-flash",
+  "deepseek-chat",
+  "deepseek-coder",
+  "deepseek-reasoner",
+];
 
 const xAIModes = [
   "grok-beta",

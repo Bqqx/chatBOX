@@ -331,6 +331,17 @@ const cn = {
         Title: "模型服务商",
         SubTitle: "切换不同的服务商",
       },
+      Custom: {
+        ApiKey: {
+          Title: "API Key",
+          SubTitle: "使用自定义中转站 Key",
+          Placeholder: "中转站 API Key",
+        },
+        Endpoint: {
+          Title: "接口地址",
+          SubTitle: "填写你的中转站 API 地址，必须包含 http(s)://",
+        },
+      },
       OpenAI: {
         ApiKey: {
           Title: "API Key",
@@ -659,6 +670,43 @@ const cn = {
   },
   Discovery: {
     Name: "发现",
+  },
+  ImageChat: {
+    Name: "生图",
+    ChatName: "聊天",
+    NewChat: "新的生图",
+    Title: "生图",
+    SubTitle: "发送提示词生成图片",
+    Empty: "发送一段提示词，图片会显示在这里。",
+    Prompt: "描述你想生成的图片",
+    Send: "生成",
+    Model: "生图模型",
+    Size: "比例",
+    Count: "张数",
+    NeedCustomRelay: "请先在设置里的“生图接口设置”启用生图自定义接口，并填写中转站接口地址和 API Key。",
+    Generating: "正在生成图片…",
+    Error: "生成失败",
+    Settings: {
+      Title: "生图接口设置",
+      SubTitle: "专门用于生图功能的中转站地址和 Key",
+      Enable: {
+        Title: "启用生图自定义接口",
+        SubTitle: "生图功能是否使用下面单独配置的接口",
+      },
+      Endpoint: {
+        Title: "生图接口地址",
+        SubTitle: "填写支持图片生成的中转站 API 地址，必须包含 http(s)://",
+      },
+      ApiKey: {
+        Title: "生图 API Key",
+        SubTitle: "仅用于生图请求，不影响聊天接口",
+        Placeholder: "生图中转站 API Key",
+      },
+      Model: {
+        Title: "默认生图模型",
+        SubTitle: "生图输入框会默认使用这个模型",
+      },
+    },
   },
   Mcp: {
     Name: "MCP",

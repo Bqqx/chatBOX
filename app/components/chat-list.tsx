@@ -8,13 +8,14 @@ import {
   OnDragEndResponder,
 } from "@hello-pangea/dnd";
 
-import { useChatStore } from "../store";
+import { useChatStore, useImageChatStore } from "../store";
 
 import Locale from "../locales";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Path } from "../constant";
 import { MaskAvatar } from "./mask";
 import { Mask } from "../store/mask";
+import { createEmptyMask } from "../store/mask";
 import { useRef, useEffect } from "react";
 import { showConfirm } from "./ui-lib";
 import { useMobileScreen } from "../utils";
@@ -31,6 +32,7 @@ export function ChatItem(props: {
   index: number;
   narrow?: boolean;
   mask: Mask;
+  activePaths?: Path[];
 }) {
   const draggableRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -49,7 +51,9 @@ export function ChatItem(props: {
           className={clsx(styles["chat-item"], {
             [styles["chat-item-selected"]]:
               props.selected &&
-              (currentPath === Path.Chat || currentPath === Path.Home),
+              (props.activePaths ?? [Path.Chat, Path.Home]).includes(
+                currentPath as Path,
+              ),
           })}
           onClick={props.onClick}
           ref={(ele) => {
@@ -163,6 +167,79 @@ export function ChatList(props: { narrow?: boolean }) {
                 }}
                 narrow={props.narrow}
                 mask={item.mask}
+                activePaths={[Path.Chat, Path.Home]}
+              />
+            ))}
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
+    </DragDropContext>
+  );
+}
+
+export function ImageChatList(props: { narrow?: boolean }) {
+  const [sessions, selectedIndex, selectSession, moveSession] =
+    useImageChatStore((state) => [
+      state.sessions,
+      state.currentSessionIndex,
+      state.selectSession,
+      state.moveSession,
+    ]);
+  const imageChatStore = useImageChatStore();
+  const navigate = useNavigate();
+  const isMobileScreen = useMobileScreen();
+  const imageMask = createEmptyMask();
+
+  const onDragEnd: OnDragEndResponder = (result) => {
+    const { destination, source } = result;
+    if (!destination) {
+      return;
+    }
+
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return;
+    }
+
+    moveSession(source.index, destination.index);
+  };
+
+  return (
+    <DragDropContext onDragEnd={onDragEnd}>
+      <Droppable droppableId="image-chat-list">
+        {(provided) => (
+          <div
+            className={styles["chat-list"]}
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+          >
+            {sessions.map((item, i) => (
+              <ChatItem
+                title={item.topic}
+                time={new Date(item.lastUpdate).toLocaleString()}
+                count={item.messages.length}
+                key={item.id}
+                id={item.id}
+                index={i}
+                selected={i === selectedIndex}
+                onClick={() => {
+                  navigate(Path.Sd);
+                  selectSession(i);
+                }}
+                onDelete={async () => {
+                  if (
+                    (!props.narrow && !isMobileScreen) ||
+                    (await showConfirm(Locale.Home.DeleteChat))
+                  ) {
+                    imageChatStore.deleteSession(i);
+                  }
+                }}
+                narrow={props.narrow}
+                mask={imageMask}
+                activePaths={[Path.Sd]}
               />
             ))}
             {provided.placeholder}

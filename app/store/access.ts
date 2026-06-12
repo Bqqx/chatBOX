@@ -68,6 +68,21 @@ const DEFAULT_ACCESS_STATE = {
 
   provider: ServiceProvider.OpenAI,
 
+  // custom relay
+  customUrl: "",
+  customApiKey: "",
+
+  // image generation relay
+  imageUseCustomConfig: false,
+  imageUrl: "",
+  imageApiKey: "",
+  imageModel: "gpt-image-1",
+  imageEngine: "Nanobanana",
+  imageNanoModel: "[Rim] gemini-3-pro-image-preview",
+  imageChatGPTModel: "gpt-image-2",
+  imageNanoModels: ["[Rim] gemini-3-pro-image-preview"],
+  imageChatGPTModels: ["gpt-image-2"],
+
   // openai
   openaiUrl: DEFAULT_OPENAI_URL,
   openaiApiKey: "",
@@ -176,6 +191,14 @@ export const useAccessStore = createPersistStore(
       return ensure(get(), ["openaiApiKey"]);
     },
 
+    isValidCustom() {
+      return ensure(get(), ["customUrl", "customApiKey"]);
+    },
+
+    isValidImage() {
+      return ensure(get(), ["imageUrl", "imageApiKey"]);
+    },
+
     isValidAzure() {
       return ensure(get(), ["azureUrl", "azureApiKey", "azureApiVersion"]);
     },
@@ -232,6 +255,8 @@ export const useAccessStore = createPersistStore(
       // has token or has code or disabled access control
       return (
         this.isValidOpenAI() ||
+        this.isValidCustom() ||
+        this.isValidImage() ||
         this.isValidAzure() ||
         this.isValidGoogle() ||
         this.isValidAnthropic() ||

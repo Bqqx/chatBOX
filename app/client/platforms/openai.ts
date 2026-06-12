@@ -33,6 +33,7 @@ import {
   LLMModel,
   LLMUsage,
   MultimodalContent,
+  resolveCustomOpenAIEndpoint,
   SpeechOptions,
 } from "../api";
 import Locale from "../../locales";
@@ -88,6 +89,21 @@ export class ChatGPTApi implements LLMApi {
     let baseUrl = "";
 
     const isAzure = path.includes("deployments");
+    const isCustom =
+      accessStore.useCustomConfig &&
+      accessStore.provider === ServiceProvider.Custom;
+
+    if (isCustom) {
+      const endpoint = resolveCustomOpenAIEndpoint(accessStore.customUrl, path);
+      const isApp = !!getClientConfig()?.isApp;
+
+      if (isApp) {
+        return endpoint.url;
+      }
+
+      return `/api/proxy/${endpoint.path}`;
+    }
+
     if (accessStore.useCustomConfig) {
       if (isAzure && !accessStore.isValidAzure()) {
         throw Error(
@@ -116,6 +132,12 @@ export class ChatGPTApi implements LLMApi {
     }
 
     console.log("[Proxy Endpoint] ", baseUrl, path);
+
+    const isApp = !!getClientConfig()?.isApp;
+    if (!isApp && !isAzure && baseUrl.startsWith("http")) {
+      const endpoint = resolveCustomOpenAIEndpoint(baseUrl, path);
+      return `/api/proxy/${endpoint.path}`;
+    }
 
     // try rebuild url, when using cloudflare ai gateway in client
     return cloudflareAIGatewayUrl([baseUrl, path].join("/"));
