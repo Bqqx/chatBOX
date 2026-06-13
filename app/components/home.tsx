@@ -179,6 +179,7 @@ function Screen() {
   const isAuth = location.pathname === Path.Auth;
   const isSd = location.pathname === Path.Sd;
   const isSdNew = location.pathname === Path.SdNew;
+  const isResources = location.pathname === Path.Resources;
 
   const isMobileScreen = useMobileScreen();
   const shouldTightBorder =
@@ -202,6 +203,7 @@ function Screen() {
     return (
       <>
         <SideBar
+          mode={isResources ? "resource" : "chat"}
           className={clsx({
             [styles["sidebar-show"]]: isHome,
           })}

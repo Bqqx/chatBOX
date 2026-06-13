@@ -14,19 +14,16 @@ import styles from "./resource-manager.module.scss";
 import { IconButton } from "./button";
 import { Modal } from "./ui-lib";
 import { useImageChatStore } from "../store";
+import {
+  filterImageResources,
+  getImageResources,
+  ImageResource,
+  ImageResourceTimeFilter,
+} from "../utils/image-resources";
+import { useSearchParams } from "react-router-dom";
 
 import DeleteIcon from "../icons/delete.svg";
 import DownloadIcon from "../icons/download.svg";
-
-type ImageResource = {
-  id: string;
-  sessionId: string;
-  messageId: string;
-  imageIndex: number;
-  image: string;
-  topic: string;
-  createdAt: number;
-};
 
 function pad(value: number) {
   return value.toString().padStart(2, "0");
@@ -63,33 +60,6 @@ function getImageExtension(image: string) {
   return "png";
 }
 
-function normalizeDataImageUrl(input: string) {
-  const match = input.match(
-    /data:(image\/[a-zA-Z+.-]+);base64,([\sA-Za-z0-9+/=]+)/,
-  );
-  if (!match) return input;
-
-  return `data:${match[1]};base64,${match[2].replace(/\s+/g, "")}`;
-}
-
-function extractImagesFromText(text: string) {
-  const markdownImageRegex =
-    /!\[[^\]]*]\s*\(\s*(data:image\/[a-zA-Z+.-]+;base64,[\s\S]*?|https?:\/\/[^)\s]+)\s*\)/g;
-  const htmlImageRegex = /<img[^>]+src=["']([^"']+)["']/gi;
-  const dataImageRegex = /data:image\/[a-zA-Z+.-]+;base64,[A-Za-z0-9+/=]+/g;
-  const urls: string[] = [];
-
-  for (const match of text.matchAll(markdownImageRegex)) {
-    urls.push(normalizeDataImageUrl(match[1]));
-  }
-  for (const match of text.matchAll(htmlImageRegex)) {
-    urls.push(normalizeDataImageUrl(match[1]));
-  }
-  urls.push(...(text.match(dataImageRegex) ?? []).map(normalizeDataImageUrl));
-
-  return urls;
-}
-
 function downloadImage(resource: ImageResource) {
   const link = document.createElement("a");
   const ext = getImageExtension(resource.image);
@@ -105,31 +75,26 @@ function downloadImage(resource: ImageResource) {
 
 export function ResourceManager() {
   const imageChatStore = useImageChatStore();
+  const [searchParams] = useSearchParams();
   const [selected, setSelected] = useState<ImageResource | undefined>();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  const resources = useMemo(() => {
-    return imageChatStore.sessions.flatMap((session) =>
-      session.messages.flatMap((message) => {
-        const images = Array.from(
-          new Set([
-            ...(message.images ?? []),
-            ...extractImagesFromText(message.content),
-          ]),
-        );
-
-        return images.map((image, imageIndex) => ({
-          id: `${session.id}-${message.id}-${imageIndex}`,
-          sessionId: session.id,
-          messageId: message.id,
-          imageIndex,
-          image,
-          topic: session.topic,
-          createdAt: message.createdAt,
-        }));
+  const allResources = useMemo(
+    () => getImageResources(imageChatStore.sessions),
+    [imageChatStore.sessions],
+  );
+  const sessionId = searchParams.get("session");
+  const timeParam = searchParams.get("time");
+  const timeFilter: ImageResourceTimeFilter =
+    timeParam === "today" || timeParam === "week" ? timeParam : "all";
+  const resources = useMemo(
+    () =>
+      filterImageResources(allResources, {
+        sessionId,
+        time: timeFilter,
       }),
-    );
-  }, [imageChatStore.sessions]);
+    [allResources, sessionId, timeFilter],
+  );
   const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const selectedResources = useMemo(
     () => resources.filter((resource) => selectedIdSet.has(resource.id)),

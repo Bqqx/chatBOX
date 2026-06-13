@@ -239,6 +239,26 @@
   white-space: nowrap;
 }
 
+.resource-panel {
+  padding-bottom: 10px;
+}
+
+.resource-panel-title {
+  color: rgb(166, 166, 166);
+  font-size: 12px;
+  font-weight: 700;
+  margin: 18px 4px 10px;
+}
+
+.resource-item-narrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .narrow-sidebar {
   .sidebar-title,
   .sidebar-sub-title {

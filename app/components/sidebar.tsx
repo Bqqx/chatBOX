@@ -17,6 +17,10 @@ import ChatIcon from "../icons/chat.svg";
 import Locale from "../locales";
 
 import { useAppConfig, useChatStore, useImageChatStore } from "../store";
+import {
+  filterImageResources,
+  getImageResources,
+} from "../utils/image-resources";
 
 import {
   DEFAULT_SIDEBAR_WIDTH,
@@ -27,7 +31,7 @@ import {
   REPO_URL,
 } from "../constant";
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { isIOS, useMobileScreen } from "../utils";
 import dynamic from "next/dynamic";
 import { showConfirm } from "./ui-lib";
@@ -44,13 +48,15 @@ const ImageChatList = dynamic(
   },
 );
 
-export function useHotKey(mode: "chat" | "image" = "chat") {
+export function useHotKey(mode: "chat" | "image" | "resource" = "chat") {
   const chatStore = useChatStore();
   const imageChatStore = useImageChatStore();
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.altKey || e.ctrlKey) {
+        if (mode === "resource") return;
+
         if (e.key === "ArrowUp") {
           if (mode === "chat") {
             chatStore.nextSession(-1);
@@ -70,6 +76,113 @@ export function useHotKey(mode: "chat" | "image" = "chat") {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   });
+}
+
+function ResourcePanelItem(props: {
+  title: string;
+  count: number;
+  selected: boolean;
+  onClick: () => void;
+  narrow?: boolean;
+}) {
+  if (props.narrow) {
+    return (
+      <div
+        className={clsx(styles["chat-item"], styles["resource-item-narrow"], {
+          [styles["chat-item-selected"]]: props.selected,
+        })}
+        onClick={props.onClick}
+        title={`${props.title}\n${props.count} 张图片`}
+      >
+        {props.count}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={clsx(styles["chat-item"], {
+        [styles["chat-item-selected"]]: props.selected,
+      })}
+      onClick={props.onClick}
+      title={`${props.title}\n${props.count} 张图片`}
+    >
+      <div className={styles["chat-item-title"]}>{props.title}</div>
+      <div className={styles["chat-item-info"]}>
+        <div className={styles["chat-item-count"]}>{props.count} 张图片</div>
+      </div>
+    </div>
+  );
+}
+
+function ResourcePanel(props: { narrow?: boolean }) {
+  const imageChatStore = useImageChatStore();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const resources = useMemo(
+    () => getImageResources(imageChatStore.sessions),
+    [imageChatStore.sessions],
+  );
+  const sessionId = searchParams.get("session");
+  const timeParam = searchParams.get("time");
+  const activeTime =
+    timeParam === "today" || timeParam === "week" ? timeParam : "all";
+
+  const todayCount = filterImageResources(resources, { time: "today" }).length;
+  const weekCount = filterImageResources(resources, { time: "week" }).length;
+  const sessionsWithImages = imageChatStore.sessions
+    .map((session) => ({
+      session,
+      count: resources.filter((resource) => resource.sessionId === session.id)
+        .length,
+    }))
+    .filter((item) => item.count > 0);
+
+  const goTo = (search: string) => {
+    navigate(`${Path.Resources}${search}`);
+  };
+
+  return (
+    <div className={styles["resource-panel"]}>
+      <ResourcePanelItem
+        title="全部图片"
+        count={resources.length}
+        selected={!sessionId && activeTime === "all"}
+        onClick={() => goTo("")}
+        narrow={props.narrow}
+      />
+      <ResourcePanelItem
+        title="今天"
+        count={todayCount}
+        selected={!sessionId && activeTime === "today"}
+        onClick={() => goTo("?time=today")}
+        narrow={props.narrow}
+      />
+      <ResourcePanelItem
+        title="本周"
+        count={weekCount}
+        selected={!sessionId && activeTime === "week"}
+        onClick={() => goTo("?time=week")}
+        narrow={props.narrow}
+      />
+
+      {sessionsWithImages.length > 0 && !props.narrow && (
+        <div className={styles["resource-panel-title"]}>生图对话来源</div>
+      )}
+      {sessionsWithImages.map(({ session, count }) => (
+        <ResourcePanelItem
+          key={session.id}
+          title={session.topic}
+          count={count}
+          selected={sessionId === session.id}
+          onClick={() =>
+            goTo(`?session=${encodeURIComponent(session.id)}`)
+          }
+          narrow={props.narrow}
+        />
+      ))}
+    </div>
+  );
 }
 
 export function useDragSideBar() {
@@ -236,7 +349,7 @@ export function SideBarTail(props: {
 
 export function SideBar(props: {
   className?: string;
-  mode?: "chat" | "image";
+  mode?: "chat" | "image" | "resource";
 }) {
   const mode = props.mode ?? "chat";
   useHotKey(mode);
@@ -313,11 +426,19 @@ export function SideBar(props: {
       <SideBarBody
         onClick={(e) => {
           if (e.target === e.currentTarget) {
-            navigate(mode === "image" ? Path.Sd : Path.Home);
+            navigate(
+              mode === "image"
+                ? Path.Sd
+                : mode === "resource"
+                ? Path.Resources
+                : Path.Home,
+            );
           }
         }}
       >
-        {mode === "image" ? (
+        {mode === "resource" ? (
+          <ResourcePanel narrow={shouldNarrow} />
+        ) : mode === "image" ? (
           <ImageChatList narrow={shouldNarrow} />
         ) : (
           <ChatList narrow={shouldNarrow} />
@@ -326,22 +447,24 @@ export function SideBar(props: {
       <SideBarTail
         primaryAction={
           <>
-            <div className={clsx(styles["sidebar-action"], styles.mobile)}>
-              <IconButton
-                icon={<DeleteIcon />}
-                onClick={async () => {
-                  if (await showConfirm(Locale.Home.DeleteChat)) {
-                    if (mode === "image") {
-                      imageChatStore.deleteSession(
-                        imageChatStore.currentSessionIndex,
-                      );
-                    } else {
-                      chatStore.deleteSession(chatStore.currentSessionIndex);
+            {mode !== "resource" && (
+              <div className={clsx(styles["sidebar-action"], styles.mobile)}>
+                <IconButton
+                  icon={<DeleteIcon />}
+                  onClick={async () => {
+                    if (await showConfirm(Locale.Home.DeleteChat)) {
+                      if (mode === "image") {
+                        imageChatStore.deleteSession(
+                          imageChatStore.currentSessionIndex,
+                        );
+                      } else {
+                        chatStore.deleteSession(chatStore.currentSessionIndex);
+                      }
                     }
-                  }
-                }}
-              />
-            </div>
+                  }}
+                />
+              </div>
+            )}
             <div className={styles["sidebar-action"]}>
               <Link to={Path.Settings}>
                 <IconButton
@@ -363,28 +486,30 @@ export function SideBar(props: {
           </>
         }
         secondaryAction={
-          <IconButton
-            icon={<AddIcon />}
-            text={
-              shouldNarrow
-                ? undefined
-                : mode === "image"
-                ? Locale.ImageChat.NewChat
-                : Locale.Home.NewChat
-            }
-            onClick={() => {
-              if (mode === "image") {
-                imageChatStore.newSession();
-                navigate(Path.Sd);
-              } else if (config.dontShowMaskSplashScreen) {
-                chatStore.newSession();
-                navigate(Path.Chat);
-              } else {
-                navigate(Path.NewChat);
+          mode === "resource" ? null : (
+            <IconButton
+              icon={<AddIcon />}
+              text={
+                shouldNarrow
+                  ? undefined
+                  : mode === "image"
+                  ? Locale.ImageChat.NewChat
+                  : Locale.Home.NewChat
               }
-            }}
-            shadow
-          />
+              onClick={() => {
+                if (mode === "image") {
+                  imageChatStore.newSession();
+                  navigate(Path.Sd);
+                } else if (config.dontShowMaskSplashScreen) {
+                  chatStore.newSession();
+                  navigate(Path.Chat);
+                } else {
+                  navigate(Path.NewChat);
+                }
+              }}
+              shadow
+            />
+          )
         }
       />
     </SideBarContainer>
