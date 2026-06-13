@@ -1,6 +1,13 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, {
+  KeyboardEvent,
+  MouseEvent,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import clsx from "clsx";
 
 import styles from "./resource-manager.module.scss";
 
@@ -99,6 +106,7 @@ function downloadImage(resource: ImageResource) {
 export function ResourceManager() {
   const imageChatStore = useImageChatStore();
   const [selected, setSelected] = useState<ImageResource | undefined>();
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const resources = useMemo(() => {
     return imageChatStore.sessions.flatMap((session) =>
@@ -122,15 +130,78 @@ export function ResourceManager() {
       }),
     );
   }, [imageChatStore.sessions]);
+  const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const selectedResources = useMemo(
+    () => resources.filter((resource) => selectedIdSet.has(resource.id)),
+    [resources, selectedIdSet],
+  );
+  const resourceIds = useMemo(
+    () => new Set(resources.map((resource) => resource.id)),
+    [resources],
+  );
+  const selectedCount = selectedResources.length;
+  const hasSelection = selectedCount > 0;
+  const allSelected =
+    resources.length > 0 && selectedCount === resources.length;
+
+  useEffect(() => {
+    setSelectedIds((ids) => ids.filter((id) => resourceIds.has(id)));
+  }, [resourceIds]);
 
   function deleteSelectedImage() {
     if (!selected) return;
-    imageChatStore.deleteImage(
-      selected.sessionId,
-      selected.messageId,
-      selected.image,
+    deleteResources([selected]);
+  }
+
+  function toggleSelectAll() {
+    setSelectedIds(allSelected ? [] : resources.map((resource) => resource.id));
+  }
+
+  function toggleResourceSelection(
+    event: MouseEvent<HTMLButtonElement>,
+    resourceId: string,
+  ) {
+    event.stopPropagation();
+    setSelectedIds((ids) =>
+      ids.includes(resourceId)
+        ? ids.filter((id) => id !== resourceId)
+        : ids.concat(resourceId),
     );
+  }
+
+  function downloadResources(targetResources: ImageResource[]) {
+    targetResources.forEach((resource, index) => {
+      window.setTimeout(() => downloadImage(resource), index * 120);
+    });
+  }
+
+  function deleteResources(targetResources: ImageResource[]) {
+    targetResources.forEach((resource) => {
+      imageChatStore.deleteImage(
+        resource.sessionId,
+        resource.messageId,
+        resource.image,
+      );
+    });
+    setSelectedIds([]);
     setSelected(undefined);
+  }
+
+  function deleteSelectedResources() {
+    deleteResources(selectedResources);
+  }
+
+  function downloadSelectedResources() {
+    downloadResources(selectedResources);
+  }
+
+  function openResourceOnKey(
+    event: KeyboardEvent<HTMLDivElement>,
+    resource: ImageResource,
+  ) {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    setSelected(resource);
   }
 
   return (
@@ -142,6 +213,37 @@ export function ResourceManager() {
             共 {resources.length} 张图片
           </div>
         </div>
+        <div className={styles.toolbar}>
+          <button
+            type="button"
+            className={clsx(styles.toolbarButton, {
+              [styles.toolbarButtonActive]: allSelected,
+            })}
+            onClick={toggleSelectAll}
+            disabled={resources.length === 0}
+          >
+            <span className={styles.checkbox}>{allSelected ? "\u2713" : ""}</span>
+            全选
+          </button>
+          {hasSelection && (
+            <>
+              <button
+                type="button"
+                className={styles.toolbarButton}
+                onClick={downloadSelectedResources}
+              >
+                下载 ({selectedCount})
+              </button>
+              <button
+                type="button"
+                className={clsx(styles.toolbarButton, styles.dangerButton)}
+                onClick={deleteSelectedResources}
+              >
+                删除 ({selectedCount})
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       <div className={styles.body}>
@@ -152,14 +254,32 @@ export function ResourceManager() {
             <div className={styles.sectionTitle}>媒体内容</div>
             <div className={styles.grid}>
               {resources.map((resource) => (
-                <button
-                  type="button"
+                <div
                   key={resource.id}
-                  className={styles.tile}
+                  role="button"
+                  tabIndex={0}
+                  className={clsx(styles.tile, {
+                    [styles.tileSelected]: selectedIdSet.has(resource.id),
+                  })}
                   onClick={() => setSelected(resource)}
+                  onKeyDown={(event) => openResourceOnKey(event, resource)}
                 >
+                  <button
+                    type="button"
+                    aria-label="选择图片"
+                    className={clsx(styles.selectButton, {
+                      [styles.selectButtonActive]: selectedIdSet.has(
+                        resource.id,
+                      ),
+                    })}
+                    onClick={(event) =>
+                      toggleResourceSelection(event, resource.id)
+                    }
+                  >
+                    {selectedIdSet.has(resource.id) ? "\u2713" : ""}
+                  </button>
                   <img src={resource.image} alt={resource.topic} />
-                </button>
+                </div>
               ))}
             </div>
           </>
