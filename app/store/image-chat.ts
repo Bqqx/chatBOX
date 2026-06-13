@@ -10,6 +10,7 @@ export type ImageChatMessage = {
   role: "user" | "assistant";
   content: string;
   images?: string[];
+  deletedImages?: number;
   status?: "loading" | "error";
   createdAt: number;
   model?: string;
@@ -198,6 +199,43 @@ export const useImageChatStore = createPersistStore(
 
         const message = { ...session.messages[messageIndex] };
         updater(message);
+        const messages = [...session.messages];
+        messages[messageIndex] = message;
+        const nextSessions = [...sessions];
+        nextSessions[sessionIndex] = {
+          ...session,
+          messages,
+          lastUpdate: Date.now(),
+        };
+        set(() => ({ sessions: nextSessions }));
+      },
+
+      deleteImage(sessionId: string, messageId: string, imageSrc: string) {
+        const sessions = get().sessions;
+        const sessionIndex = sessions.findIndex(
+          (item) => item.id === sessionId,
+        );
+        const session = sessions[sessionIndex];
+        const messageIndex =
+          session?.messages.findIndex((item) => item.id === messageId) ?? -1;
+
+        if (!session || messageIndex < 0) return;
+
+        const message = { ...session.messages[messageIndex] };
+        const images = [...(message.images ?? [])];
+        const imageIndex = images.indexOf(imageSrc);
+
+        if (imageIndex >= 0) {
+          images.splice(imageIndex, 1);
+          message.images = images;
+        } else if (message.content.includes(imageSrc)) {
+          message.content = message.content.split(imageSrc).join("");
+        } else {
+          return;
+        }
+
+        message.deletedImages = (message.deletedImages ?? 0) + 1;
+
         const messages = [...session.messages];
         messages[messageIndex] = message;
         const nextSessions = [...sessions];

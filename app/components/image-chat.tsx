@@ -1123,6 +1123,7 @@ export function ImageChat() {
                     message.content,
                     displayImages,
                   );
+                  const deletedImages = message.deletedImages ?? 0;
 
                   return (
                     <div
@@ -1155,6 +1156,21 @@ export function ImageChat() {
                                 image={image}
                               />
                             ))}
+                            {Array.from({ length: deletedImages }).map(
+                              (_, index) => (
+                                <div
+                                  key={`${message.id}-deleted-${index}`}
+                                  className={styles["deleted-image"]}
+                                >
+                                  图片已删除
+                                </div>
+                              ),
+                            )}
+                          </div>
+                        )}
+                        {displayImages.length === 0 && deletedImages > 0 && (
+                          <div className={styles["deleted-image"]}>
+                            图片已删除
                           </div>
                         )}
                         {message.model && message.status !== "loading" && (

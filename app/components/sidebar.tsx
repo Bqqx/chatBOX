@@ -272,14 +272,10 @@ export function SideBar(props: {
         <div className={styles["sidebar-header-bar"]}>
           <IconButton
             icon={<MaskIcon />}
-            text={shouldNarrow ? undefined : Locale.Mask.Name}
+            text={shouldNarrow ? undefined : "资源管理"}
             className={styles["sidebar-bar-button"]}
             onClick={() => {
-              if (config.dontShowMaskSplashScreen !== true) {
-                navigate(Path.NewChat, { state: { fromHome: true } });
-              } else {
-                navigate(Path.Masks, { state: { fromHome: true } });
-              }
+              navigate(Path.Resources, { state: { fromHome: true } });
             }}
             shadow
           />

@@ -42,6 +42,20 @@
   cursor: zoom-in;
 }
 
+.deleted-image {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  border: var(--border-in-light);
+  background: var(--white);
+  color: var(--black);
+  opacity: 0.45;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+}
+
 .image-options {
   display: grid;
   grid-template-columns: 140px minmax(220px, 1fr) 140px 96px;

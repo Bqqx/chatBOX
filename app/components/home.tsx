@@ -60,6 +60,13 @@ const MaskPage = dynamic(async () => (await import("./mask")).MaskPage, {
   loading: () => <Loading noLogo />,
 });
 
+const ResourceManager = dynamic(
+  async () => (await import("./resource-manager")).ResourceManager,
+  {
+    loading: () => <Loading noLogo />,
+  },
+);
+
 const PluginPage = dynamic(async () => (await import("./plugin")).PluginPage, {
   loading: () => <Loading noLogo />,
 });
@@ -204,6 +211,7 @@ function Screen() {
             <Route path={Path.Home} element={<Chat />} />
             <Route path={Path.NewChat} element={<NewChat />} />
             <Route path={Path.Masks} element={<MaskPage />} />
+            <Route path={Path.Resources} element={<ResourceManager />} />
             <Route path={Path.Plugins} element={<PluginPage />} />
             <Route path={Path.SearchChat} element={<SearchChat />} />
             <Route path={Path.Chat} element={<Chat />} />
