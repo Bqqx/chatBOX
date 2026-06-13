@@ -397,44 +397,116 @@ function ModelSelector(props: {
   onAdd: (model: string) => void;
   onDelete: (model: string) => void;
 }) {
+  const selectorRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [newModel, setNewModel] = useState("");
+  const currentModel = props.value || props.placeholder;
+
+  useEffect(() => {
+    if (!open) return;
+
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      if (!selectorRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [open]);
+
   function addModel() {
-    const model = window.prompt("请输入中转模型名", "")?.trim() ?? "";
+    const model = newModel.trim();
     if (!model) return;
     props.onAdd(model);
+    setNewModel("");
+    setOpen(false);
   }
 
   return (
-    <div className={styles["model-selector"]}>
-      <select
+    <div className={styles["model-selector"]} ref={selectorRef}>
+      <button
+        type="button"
         aria-label="中转模型名"
-        value={props.value || props.placeholder}
-        onChange={(event) => props.onSelect(event.currentTarget.value)}
+        aria-expanded={open}
+        className={styles["model-selector-trigger"]}
+        onClick={() => setOpen((value) => !value)}
       >
-        {props.options.map((model) => (
-          <option key={model} value={model}>
-            {model}
-          </option>
-        ))}
-      </select>
-      <button
-        type="button"
-        className={styles["model-selector-action"]}
-        aria-label="新增模型"
-        title="新增模型"
-        onClick={addModel}
-      >
-        +
+        <span>{currentModel}</span>
+        <span className={styles["model-selector-arrow"]}>▾</span>
       </button>
-      <button
-        type="button"
-        className={styles["model-selector-action"]}
-        aria-label="删除当前模型"
-        title="删除当前模型"
-        onClick={() => props.onDelete(props.value)}
-        disabled={props.options.length <= 1 || !props.value}
-      >
-        ×
-      </button>
+      {open && (
+        <div className={styles["model-selector-menu"]}>
+          <div className={styles["model-selector-list"]}>
+            {props.options.map((model) => (
+              <div
+                key={model}
+                className={clsx(styles["model-selector-option"], {
+                  [styles["model-selector-option-active"]]:
+                    model === currentModel,
+                })}
+              >
+                <button
+                  type="button"
+                  className={styles["model-selector-option-name"]}
+                  onClick={() => {
+                    props.onSelect(model);
+                    setOpen(false);
+                  }}
+                >
+                  {model}
+                </button>
+                <button
+                  type="button"
+                  aria-label={`删除模型 ${model}`}
+                  className={styles["model-selector-delete"]}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    props.onDelete(model);
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className={styles["model-selector-add"]}>
+            <input
+              aria-label="新增模型名"
+              value={newModel}
+              placeholder="新增模型名"
+              onChange={(event) => setNewModel(event.currentTarget.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  addModel();
+                }
+                if (event.key === "Escape") {
+                  setOpen(false);
+                }
+              }}
+            />
+            <button
+              type="button"
+              aria-label="新增模型"
+              title="新增模型"
+              onClick={addModel}
+              disabled={!newModel.trim()}
+            >
+              +
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

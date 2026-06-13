@@ -75,12 +75,10 @@
 }
 
 .model-selector {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 36px 36px;
-  gap: 6px;
+  position: relative;
 }
 
-.model-selector select {
+.model-selector-trigger {
   width: 100%;
   box-sizing: border-box;
   border: var(--border-in-light);
@@ -95,19 +93,100 @@
   justify-content: space-between;
   gap: 8px;
   cursor: pointer;
+
+  span:first-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
-.model-selector-action {
+.model-selector-arrow {
+  opacity: 0.65;
+  flex: 0 0 auto;
+  font-size: 12px;
+}
+
+.model-selector-menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 6px);
+  z-index: 20;
   border: var(--border-in-light);
   border-radius: 10px;
   background: var(--white);
+  box-shadow: var(--card-shadow);
   color: var(--black);
-  min-height: 36px;
-  cursor: pointer;
+  overflow: hidden;
+}
 
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.45;
+.model-selector-list {
+  max-height: 168px;
+  overflow: auto;
+}
+
+.model-selector-option {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  align-items: stretch;
+  border-bottom: var(--border-in-light);
+}
+
+.model-selector-option-active {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.model-selector-option-name,
+.model-selector-delete,
+.model-selector-add button {
+  border: 0;
+  background: transparent;
+  color: var(--black);
+  cursor: pointer;
+}
+
+.model-selector-option-name {
+  min-width: 0;
+  min-height: 34px;
+  padding: 0 10px;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.model-selector-delete {
+  font-size: 18px;
+  opacity: 0.5;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.model-selector-add {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  align-items: center;
+
+  input {
+    min-height: 34px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    padding: 0 10px;
+  }
+
+  button {
+    min-height: 34px;
+    font-size: 16px;
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.35;
+    }
   }
 }
 
