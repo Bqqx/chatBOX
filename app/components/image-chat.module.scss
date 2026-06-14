@@ -54,6 +54,17 @@
   max-width: 100%;
 }
 
+.image-chat-action-icon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
 .image-message-content-media {
   width: 560px;
 }

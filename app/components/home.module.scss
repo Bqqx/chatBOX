@@ -54,7 +54,14 @@
     margin-bottom: 20px;
 
     .sidebar-bar-button {
-      flex-grow: 1;
+      flex: 1 1 0;
+      min-width: 0;
+      padding-left: 6px;
+      padding-right: 6px;
+
+      &:first-child {
+        flex-grow: 1.45;
+      }
 
       &:not(:last-child) {
         margin-right: 10px;
@@ -284,6 +291,8 @@
     flex-direction: column;
 
     .sidebar-bar-button {
+      flex: none;
+
       &:not(:last-child) {
         margin-right: 0;
         margin-bottom: 10px;

@@ -29,7 +29,7 @@ import ReturnIcon from "../icons/return.svg";
 import SendWhiteIcon from "../icons/send-white.svg";
 import RenameIcon from "../icons/rename.svg";
 import ResetIcon from "../icons/reload.svg";
-import DeleteIcon from "../icons/clear.svg";
+import HideIcon from "../icons/eye-off.svg";
 import CopyIcon from "../icons/copy.svg";
 import MinIcon from "../icons/min.svg";
 import MaxIcon from "../icons/max.svg";
@@ -423,7 +423,11 @@ function ImageChatAction(props: {
 
   return (
     <div
-      className={clsx(chatStyles["chat-input-action"], "clickable")}
+      className={clsx(
+        chatStyles["chat-input-action"],
+        styles["image-chat-action"],
+        "clickable",
+      )}
       onClick={() => {
         props.onClick();
         setTimeout(updateWidth, 1);
@@ -437,7 +441,10 @@ function ImageChatAction(props: {
         } as React.CSSProperties
       }
     >
-      <div ref={iconRef} className={chatStyles.icon}>
+      <div
+        ref={iconRef}
+        className={clsx(chatStyles.icon, styles["image-chat-action-icon"])}
+      >
         {props.icon}
       </div>
       <div className={chatStyles.text} ref={textRef}>
@@ -978,7 +985,7 @@ export function ImageChat() {
     });
   }
 
-  function deleteMessage(messageId: string) {
+  function hideMessage(messageId: string) {
     imageChatStore.updateTargetSession(session, (targetSession) => {
       targetSession.messages = targetSession.messages.map((message) =>
         message.id === messageId ? { ...message, hidden: true } : message,
@@ -994,7 +1001,8 @@ export function ImageChat() {
         : extractImageUrlsFromText(message.content),
     );
     const displayContent = getDisplayContent(message.content, images).trim();
-    const copyContent = displayContent || images.join("\n") || message.model || "";
+    const copyContent =
+      displayContent || images.join("\n") || message.model || "";
 
     if (copyContent) {
       copyToClipboard(copyContent);
@@ -1306,9 +1314,9 @@ export function ImageChat() {
                                   onClick={() => retryMessage(message)}
                                 />
                                 <ImageChatAction
-                                  text={Locale.Chat.Actions.Delete}
-                                  icon={<DeleteIcon />}
-                                  onClick={() => deleteMessage(message.id)}
+                                  text="隐藏"
+                                  icon={<HideIcon />}
+                                  onClick={() => hideMessage(message.id)}
                                 />
                                 <ImageChatAction
                                   text={Locale.Chat.Actions.Copy}
@@ -1327,12 +1335,9 @@ export function ImageChat() {
                         >
                           {(displayContent || message.status === "error") && (
                             <div
-                              className={clsx(
-                                chatStyles["chat-message-item"],
-                                {
-                                  [styles.error]: message.status === "error",
-                                },
-                              )}
+                              className={clsx(chatStyles["chat-message-item"], {
+                                [styles.error]: message.status === "error",
+                              })}
                             >
                               {displayContent}
                             </div>
