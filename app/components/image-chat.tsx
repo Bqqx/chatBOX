@@ -21,7 +21,9 @@ import {
   useImageChatStore,
 } from "../store";
 import { copyToClipboard, useMobileScreen } from "../utils";
-import { showImageModal, showPrompt, showToast } from "./ui-lib";
+import { ImagePreviewModal } from "./image-preview";
+import { showPrompt, showToast } from "./ui-lib";
+import { ImageResource } from "../utils/image-resources";
 
 import ReturnIcon from "../icons/return.svg";
 import SendWhiteIcon from "../icons/send-white.svg";
@@ -349,8 +351,12 @@ function dataUrlToBlobUrl(dataUrl: string) {
   return blobUrl;
 }
 
-function ImageResult(props: { image: string }) {
-  const { image } = props;
+function ImageResult(props: {
+  resource: ImageResource;
+  onOpen: (resource: ImageResource) => void;
+}) {
+  const { resource } = props;
+  const image = resource.image;
   const [imageUrl, setImageUrl] = useState(image);
 
   useEffect(() => {
@@ -380,7 +386,7 @@ function ImageResult(props: { image: string }) {
       rel="noreferrer"
       onClick={(event) => {
         event.preventDefault();
-        showImageModal(imageUrl, true);
+        props.onOpen(resource);
       }}
     >
       <img
@@ -826,7 +832,11 @@ export function ImageChat() {
   const accessStore = useAccessStore();
   const imageChatStore = useImageChatStore();
   const session = imageChatStore.currentSession();
-  const messages = session.messages;
+  const allMessages = session.messages;
+  const messages = useMemo(
+    () => allMessages.filter((message) => !message.hidden),
+    [allMessages],
+  );
   const scrollRef = useRef<HTMLDivElement>(null);
   const savedEngine = IMAGE_ENGINE_OPTIONS.includes(
     accessStore.imageEngine as ImageEngine,
@@ -843,6 +853,9 @@ export function ImageChat() {
   const [size, setSize] = useState("1:1");
   const [count, setCount] = useState(1);
   const [generating, setGenerating] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<
+    ImageResource | undefined
+  >();
 
   const canUseImageRelay = useMemo(() => {
     return (
@@ -966,7 +979,12 @@ export function ImageChat() {
   }
 
   function deleteMessage(messageId: string) {
-    deleteMessages([messageId]);
+    imageChatStore.updateTargetSession(session, (targetSession) => {
+      targetSession.messages = targetSession.messages.map((message) =>
+        message.id === messageId ? { ...message, hidden: true } : message,
+      );
+      targetSession.lastUpdate = Date.now();
+    });
   }
 
   function copyMessage(message: (typeof messages)[number]) {
@@ -1329,7 +1347,16 @@ export function ImageChat() {
                               {displayImages.map((image, index) => (
                                 <ImageResult
                                   key={`${message.id}-${index}`}
-                                  image={image}
+                                  resource={{
+                                    id: `${session.id}-${message.id}-${index}`,
+                                    sessionId: session.id,
+                                    messageId: message.id,
+                                    imageIndex: index,
+                                    image,
+                                    topic: session.topic,
+                                    createdAt: message.createdAt,
+                                  }}
+                                  onOpen={setSelectedImage}
                                 />
                               ))}
                               {Array.from({ length: deletedImages }).map(
@@ -1461,6 +1488,20 @@ export function ImageChat() {
             </div>
           </div>
         </div>
+        {selectedImage && (
+          <ImagePreviewModal
+            resource={selectedImage}
+            onClose={() => setSelectedImage(undefined)}
+            onDelete={(resource) => {
+              imageChatStore.deleteImage(
+                resource.sessionId,
+                resource.messageId,
+                resource.image,
+              );
+              setSelectedImage(undefined);
+            }}
+          />
+        )}
       </WindowContent>
     </>
   );

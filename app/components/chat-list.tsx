@@ -220,7 +220,9 @@ export function ImageChatList(props: { narrow?: boolean }) {
               <ChatItem
                 title={item.topic}
                 time={new Date(item.lastUpdate).toLocaleString()}
-                count={item.messages.length}
+                count={
+                  item.messages.filter((message) => !message.hidden).length
+                }
                 key={item.id}
                 id={item.id}
                 index={i}

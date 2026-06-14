@@ -11,6 +11,7 @@ export type ImageChatMessage = {
   content: string;
   images?: string[];
   deletedImages?: number;
+  hidden?: boolean;
   status?: "loading" | "error";
   createdAt: number;
   model?: string;
