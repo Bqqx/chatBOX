@@ -276,6 +276,82 @@
   font-weight: 700;
 }
 
+.archive-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.archive-summary {
+  color: rgb(166, 166, 166);
+  font-size: 13px;
+}
+
+.archive-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.archive-section-title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.archive-empty-line {
+  color: rgb(166, 166, 166);
+  font-size: 13px;
+  padding: 14px;
+  border: var(--border-in-light);
+  border-radius: 10px;
+}
+
+.archive-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  border: var(--border-in-light);
+  border-radius: 10px;
+  background-color: var(--white);
+}
+
+.archive-item-main {
+  min-width: 0;
+}
+
+.archive-item-title {
+  font-size: 14px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.archive-item-info {
+  color: rgb(166, 166, 166);
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.archive-item-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+
+@media screen and (max-width: 600px) {
+  .archive-item {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .archive-item-actions {
+    justify-content: flex-end;
+  }
+}
+
 .narrow-sidebar {
   .sidebar-title,
   .sidebar-sub-title {

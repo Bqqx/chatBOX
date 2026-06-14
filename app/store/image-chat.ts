@@ -52,6 +52,7 @@ function trimImageTopic(prompt: string) {
 
 const DEFAULT_IMAGE_CHAT_STATE = {
   sessions: [createEmptyImageSession()],
+  archivedSessions: [] as ImageChatSession[],
   currentSessionIndex: 0,
 };
 
@@ -135,26 +136,44 @@ export const useImageChatStore = createPersistStore(
           sessions.push(createEmptyImageSession());
         }
 
-        const restoreState = {
-          currentSessionIndex: get().currentSessionIndex,
-          sessions: get().sessions.slice(),
-        };
-
         set(() => ({
           currentSessionIndex: nextIndex,
           sessions,
+          archivedSessions: [deletedSession, ...(get().archivedSessions ?? [])],
         }));
 
         showToast(
-          Locale.Home.DeleteToast,
+          "已归档对话",
           {
-            text: Locale.Home.Revert,
+            text: "恢复",
             onClick() {
-              set(() => restoreState);
+              get().restoreArchivedSession("image", deletedSession.id);
             },
           },
           5000,
         );
+      },
+
+      restoreArchivedSession(_type: "image", sessionId: string) {
+        const archivedSessions = get().archivedSessions ?? [];
+        const session = archivedSessions.find((item) => item.id === sessionId);
+        if (!session) return;
+
+        set((state) => ({
+          archivedSessions: (state.archivedSessions ?? []).filter(
+            (item) => item.id !== sessionId,
+          ),
+          sessions: [session, ...state.sessions],
+          currentSessionIndex: 0,
+        }));
+      },
+
+      deleteArchivedSession(_type: "image", sessionId: string) {
+        set((state) => ({
+          archivedSessions: (state.archivedSessions ?? []).filter(
+            (item) => item.id !== sessionId,
+          ),
+        }));
       },
 
       currentSession() {

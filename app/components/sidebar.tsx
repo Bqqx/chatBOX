@@ -4,6 +4,8 @@ import styles from "./home.module.scss";
 
 import { IconButton } from "./button";
 import SettingsIcon from "../icons/settings.svg";
+import HistoryIcon from "../icons/history.svg";
+import ReturnIcon from "../icons/return.svg";
 import ChatGptIcon from "../icons/chatgpt.svg";
 import AddIcon from "../icons/add.svg";
 import DeleteIcon from "../icons/delete.svg";
@@ -37,7 +39,7 @@ import {
 } from "react-router-dom";
 import { isIOS, useMobileScreen } from "../utils";
 import dynamic from "next/dynamic";
-import { showConfirm } from "./ui-lib";
+import { Modal, showConfirm } from "./ui-lib";
 import clsx from "clsx";
 import { isMcpEnabled } from "../mcp/actions";
 
@@ -50,6 +52,95 @@ const ImageChatList = dynamic(
     loading: () => null,
   },
 );
+
+function ArchiveManagerModal(props: { onClose: () => void }) {
+  const chatStore = useChatStore();
+  const imageChatStore = useImageChatStore();
+  const chatArchived = chatStore.archivedSessions ?? [];
+  const imageArchived = imageChatStore.archivedSessions ?? [];
+  const total = chatArchived.length + imageArchived.length;
+
+  const deleteArchived = async (type: "chat" | "image", id: string) => {
+    if (await showConfirm("确定要彻底删除这个归档对话吗？")) {
+      if (type === "chat") {
+        chatStore.deleteArchivedSession("chat", id);
+      } else {
+        imageChatStore.deleteArchivedSession("image", id);
+      }
+    }
+  };
+
+  const restoreArchived = (type: "chat" | "image", id: string) => {
+    if (type === "chat") {
+      chatStore.restoreArchivedSession("chat", id);
+    } else {
+      imageChatStore.restoreArchivedSession("image", id);
+    }
+  };
+
+  const renderSection = (
+    title: string,
+    type: "chat" | "image",
+    sessions: typeof chatArchived | typeof imageArchived,
+  ) => (
+    <div className={styles["archive-section"]}>
+      <div className={styles["archive-section-title"]}>
+        {title} · {sessions.length}
+      </div>
+      {sessions.length === 0 ? (
+        <div className={styles["archive-empty-line"]}>暂无归档对话</div>
+      ) : (
+        sessions.map((session) => (
+          <div className={styles["archive-item"]} key={`${type}-${session.id}`}>
+            <div className={styles["archive-item-main"]}>
+              <div className={styles["archive-item-title"]}>
+                {session.topic}
+              </div>
+              <div className={styles["archive-item-info"]}>
+                {type === "chat" ? "聊天" : "生图"} · {session.messages.length}{" "}
+                条对话 · {new Date(session.lastUpdate).toLocaleString()}
+              </div>
+            </div>
+            <div className={styles["archive-item-actions"]}>
+              <IconButton
+                icon={<ReturnIcon />}
+                text="恢复"
+                bordered
+                onClick={() => restoreArchived(type, session.id)}
+              />
+              <IconButton
+                icon={<DeleteIcon />}
+                text="删除"
+                type="danger"
+                bordered
+                onClick={() => deleteArchived(type, session.id)}
+              />
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
+
+  return (
+    <div
+      className="modal-mask"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) {
+          props.onClose();
+        }
+      }}
+    >
+      <Modal title="归档管理" onClose={props.onClose}>
+        <div className={styles["archive-manager"]}>
+          <div className={styles["archive-summary"]}>共 {total} 个归档对话</div>
+          {renderSection("聊天", "chat", chatArchived)}
+          {renderSection("生图", "image", imageArchived)}
+        </div>
+      </Modal>
+    </div>
+  );
+}
 
 export function useHotKey(mode: "chat" | "image" | "resource" = "chat") {
   const chatStore = useChatStore();
@@ -178,9 +269,7 @@ function ResourcePanel(props: { narrow?: boolean }) {
           title={session.topic}
           count={count}
           selected={sessionId === session.id}
-          onClick={() =>
-            goTo(`?session=${encodeURIComponent(session.id)}`)
-          }
+          onClick={() => goTo(`?session=${encodeURIComponent(session.id)}`)}
           narrow={props.narrow}
         />
       ))}
@@ -363,6 +452,7 @@ export function SideBar(props: {
   const chatStore = useChatStore();
   const imageChatStore = useImageChatStore();
   const [mcpEnabled, setMcpEnabled] = useState(false);
+  const [showArchiveManager, setShowArchiveManager] = useState(false);
 
   useEffect(() => {
     // 检查 MCP 是否启用
@@ -387,6 +477,9 @@ export function SideBar(props: {
       shouldNarrow={shouldNarrow}
       className={props.className}
     >
+      {showArchiveManager && (
+        <ArchiveManagerModal onClose={() => setShowArchiveManager(false)} />
+      )}
       <SideBarHeader
         title="NextChat"
         subTitle="Build your own AI assistant."
@@ -468,8 +561,9 @@ export function SideBar(props: {
               <div className={clsx(styles["sidebar-action"], styles.mobile)}>
                 <IconButton
                   icon={<DeleteIcon />}
+                  title="归档当前对话"
                   onClick={async () => {
-                    if (await showConfirm(Locale.Home.DeleteChat)) {
+                    if (await showConfirm("确定归档当前对话吗？")) {
                       if (mode === "image") {
                         imageChatStore.deleteSession(
                           imageChatStore.currentSessionIndex,
@@ -482,6 +576,15 @@ export function SideBar(props: {
                 />
               </div>
             )}
+            <div className={styles["sidebar-action"]}>
+              <IconButton
+                aria="归档管理"
+                title="归档管理"
+                icon={<HistoryIcon />}
+                shadow
+                onClick={() => setShowArchiveManager(true)}
+              />
+            </div>
             <div className={styles["sidebar-action"]}>
               <Link to={Path.Settings}>
                 <IconButton

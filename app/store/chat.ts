@@ -225,6 +225,7 @@ async function getMcpSystemPrompt(): Promise<string> {
 
 const DEFAULT_CHAT_STATE = {
   sessions: [createEmptySession()],
+  archivedSessions: [] as ChatSession[],
   currentSessionIndex: 0,
   lastInput: "",
 };
@@ -354,27 +355,44 @@ export const useChatStore = createPersistStore(
           sessions.push(createEmptySession());
         }
 
-        // for undo delete action
-        const restoreState = {
-          currentSessionIndex: get().currentSessionIndex,
-          sessions: get().sessions.slice(),
-        };
-
         set(() => ({
           currentSessionIndex: nextIndex,
           sessions,
+          archivedSessions: [deletedSession, ...(get().archivedSessions ?? [])],
         }));
 
         showToast(
-          Locale.Home.DeleteToast,
+          "已归档对话",
           {
-            text: Locale.Home.Revert,
+            text: "恢复",
             onClick() {
-              set(() => restoreState);
+              get().restoreArchivedSession("chat", deletedSession.id);
             },
           },
           5000,
         );
+      },
+
+      restoreArchivedSession(_type: "chat", sessionId: string) {
+        const archivedSessions = get().archivedSessions ?? [];
+        const session = archivedSessions.find((item) => item.id === sessionId);
+        if (!session) return;
+
+        set((state) => ({
+          archivedSessions: (state.archivedSessions ?? []).filter(
+            (item) => item.id !== sessionId,
+          ),
+          sessions: [session, ...state.sessions],
+          currentSessionIndex: 0,
+        }));
+      },
+
+      deleteArchivedSession(_type: "chat", sessionId: string) {
+        set((state) => ({
+          archivedSessions: (state.archivedSessions ?? []).filter(
+            (item) => item.id !== sessionId,
+          ),
+        }));
       },
 
       currentSession() {

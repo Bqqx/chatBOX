@@ -160,7 +160,7 @@ export function ChatList(props: { narrow?: boolean }) {
                 onDelete={async () => {
                   if (
                     (!props.narrow && !isMobileScreen) ||
-                    (await showConfirm(Locale.Home.DeleteChat))
+                    (await showConfirm("确定归档这个对话吗？"))
                   ) {
                     chatStore.deleteSession(i);
                   }
@@ -234,7 +234,7 @@ export function ImageChatList(props: { narrow?: boolean }) {
                 onDelete={async () => {
                   if (
                     (!props.narrow && !isMobileScreen) ||
-                    (await showConfirm(Locale.Home.DeleteChat))
+                    (await showConfirm("确定归档这个对话吗？"))
                   ) {
                     imageChatStore.deleteSession(i);
                   }
