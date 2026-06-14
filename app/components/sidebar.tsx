@@ -31,7 +31,12 @@ import {
   REPO_URL,
 } from "../constant";
 
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import { isIOS, useMobileScreen } from "../utils";
 import dynamic from "next/dynamic";
 import { showConfirm } from "./ui-lib";
@@ -355,6 +360,7 @@ export function SideBar(props: {
   useHotKey(mode);
   const { onDragStart, shouldNarrow } = useDragSideBar();
   const navigate = useNavigate();
+  const location = useLocation();
   const config = useAppConfig();
   const chatStore = useChatStore();
   const imageChatStore = useImageChatStore();
@@ -369,6 +375,13 @@ export function SideBar(props: {
     };
     checkMcpStatus();
   }, []);
+
+  const currentPath = location.pathname as Path;
+  const isResourcesActive = currentPath === Path.Resources;
+  const isChatActive = [Path.Home, Path.Chat, Path.NewChat].includes(
+    currentPath,
+  );
+  const isImageActive = currentPath === Path.Sd;
 
   return (
     <SideBarContainer
@@ -386,7 +399,9 @@ export function SideBar(props: {
           <IconButton
             icon={<MaskIcon />}
             text={shouldNarrow ? undefined : "资源管理"}
-            className={styles["sidebar-bar-button"]}
+            className={clsx(styles["sidebar-bar-button"], {
+              [styles["sidebar-bar-button-active"]]: isResourcesActive,
+            })}
             onClick={() => {
               navigate(Path.Resources, { state: { fromHome: true } });
             }}
@@ -406,7 +421,9 @@ export function SideBar(props: {
           <IconButton
             icon={<ChatIcon />}
             text={shouldNarrow ? undefined : Locale.ImageChat.ChatName}
-            className={styles["sidebar-bar-button"]}
+            className={clsx(styles["sidebar-bar-button"], {
+              [styles["sidebar-bar-button-active"]]: isChatActive,
+            })}
             onClick={() => {
               navigate(Path.Chat, { state: { fromHome: true } });
             }}
@@ -415,7 +432,9 @@ export function SideBar(props: {
           <IconButton
             icon={<ImageIcon />}
             text={shouldNarrow ? undefined : Locale.ImageChat.Name}
-            className={styles["sidebar-bar-button"]}
+            className={clsx(styles["sidebar-bar-button"], {
+              [styles["sidebar-bar-button-active"]]: isImageActive,
+            })}
             onClick={() => {
               navigate(Path.Sd, { state: { fromHome: true } });
             }}

@@ -20,12 +20,15 @@ import {
   useAppConfig,
   useImageChatStore,
 } from "../store";
-import { useMobileScreen } from "../utils";
-import { showImageModal, showToast } from "./ui-lib";
+import { copyToClipboard, useMobileScreen } from "../utils";
+import { showImageModal, showPrompt, showToast } from "./ui-lib";
 
 import ReturnIcon from "../icons/return.svg";
 import SendWhiteIcon from "../icons/send-white.svg";
-import SettingsIcon from "../icons/settings.svg";
+import RenameIcon from "../icons/rename.svg";
+import ResetIcon from "../icons/reload.svg";
+import DeleteIcon from "../icons/clear.svg";
+import CopyIcon from "../icons/copy.svg";
 import MinIcon from "../icons/min.svg";
 import MaxIcon from "../icons/max.svg";
 
@@ -386,6 +389,55 @@ function ImageResult(props: { image: string }) {
         alt={Locale.ImageChat.Title}
       />
     </a>
+  );
+}
+
+function ImageChatAction(props: {
+  text: string;
+  icon: JSX.Element;
+  onClick: () => void;
+}) {
+  const iconRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState({
+    full: 16,
+    icon: 16,
+  });
+
+  function updateWidth() {
+    if (!iconRef.current || !textRef.current) return;
+    const getWidth = (dom: HTMLDivElement) => dom.getBoundingClientRect().width;
+    const textWidth = getWidth(textRef.current);
+    const iconWidth = getWidth(iconRef.current);
+    setWidth({
+      full: textWidth + iconWidth,
+      icon: iconWidth,
+    });
+  }
+
+  return (
+    <div
+      className={clsx(chatStyles["chat-input-action"], "clickable")}
+      onClick={() => {
+        props.onClick();
+        setTimeout(updateWidth, 1);
+      }}
+      onMouseEnter={updateWidth}
+      onTouchStart={updateWidth}
+      style={
+        {
+          "--icon-width": `${width.icon}px`,
+          "--full-width": `${width.full}px`,
+        } as React.CSSProperties
+      }
+    >
+      <div ref={iconRef} className={chatStyles.icon}>
+        {props.icon}
+      </div>
+      <div className={chatStyles.text} ref={textRef}>
+        {props.text}
+      </div>
+    </div>
   );
 }
 
@@ -892,8 +944,83 @@ export function ImageChat() {
     }
   }
 
-  async function sendPrompt() {
-    const text = prompt.trim();
+  function updateSessionTopic() {
+    showPrompt("编辑标题", session.topic, 1).then((nextTopic) => {
+      const topic = nextTopic.trim();
+      if (!topic) return;
+      imageChatStore.updateTargetSession(session, (targetSession) => {
+        targetSession.topic = topic;
+        targetSession.lastUpdate = Date.now();
+      });
+    });
+  }
+
+  function deleteMessages(messageIds: string[]) {
+    const idSet = new Set(messageIds);
+    imageChatStore.updateTargetSession(session, (targetSession) => {
+      targetSession.messages = targetSession.messages.filter(
+        (message) => !idSet.has(message.id),
+      );
+      targetSession.lastUpdate = Date.now();
+    });
+  }
+
+  function deleteMessage(messageId: string) {
+    deleteMessages([messageId]);
+  }
+
+  function copyMessage(message: (typeof messages)[number]) {
+    const images = normalizeImageSources(
+      message.images && message.images.length > 0
+        ? message.images
+        : extractImageUrlsFromText(message.content),
+    );
+    const displayContent = getDisplayContent(message.content, images).trim();
+    const copyContent = displayContent || images.join("\n") || message.model || "";
+
+    if (copyContent) {
+      copyToClipboard(copyContent);
+    }
+  }
+
+  function retryMessage(message: (typeof messages)[number]) {
+    if (generating || message.status === "loading") return;
+
+    const messageIndex = messages.findIndex((item) => item.id === message.id);
+    if (messageIndex < 0) return;
+
+    let promptMessage: (typeof messages)[number] | undefined;
+    const removeIds = [message.id];
+
+    if (message.role === "user") {
+      promptMessage = message;
+      const nextAssistant = messages
+        .slice(messageIndex + 1)
+        .find((item) => item.role === "assistant");
+      if (nextAssistant) {
+        removeIds.push(nextAssistant.id);
+      }
+    } else {
+      for (let i = messageIndex - 1; i >= 0; i -= 1) {
+        if (messages[i].role === "user") {
+          promptMessage = messages[i];
+          removeIds.push(messages[i].id);
+          break;
+        }
+      }
+    }
+
+    const retryPrompt = promptMessage?.content.trim();
+    if (!retryPrompt) return;
+
+    if (canUseImageRelay) {
+      deleteMessages(removeIds);
+    }
+    sendPrompt(retryPrompt, false);
+  }
+
+  async function sendPrompt(promptText = prompt, clearInput = true) {
+    const text = promptText.trim();
     if (!text || generating) return;
 
     if (!canUseImageRelay) {
@@ -937,7 +1064,9 @@ export function ImageChat() {
     const assistantId = assistantMessage.id;
 
     imageChatStore.addMessages([userMessage, assistantMessage]);
-    setPrompt("");
+    if (clearInput) {
+      setPrompt("");
+    }
     setGenerating(true);
 
     try {
@@ -1074,23 +1203,32 @@ export function ImageChat() {
                 chatStyles["chat-body-title"],
               )}
             >
-              <div className="window-header-main-title">
-                {Locale.ImageChat.Title}
+              <div
+                className={clsx(
+                  "window-header-main-title",
+                  chatStyles["chat-body-main-title"],
+                )}
+                onClickCapture={updateSessionTopic}
+              >
+                {session.topic || Locale.ImageChat.Title}
               </div>
               <div className="window-header-sub-title">
-                {Locale.ImageChat.SubTitle}
+                {Locale.Chat.SubTitle(messages.length)}
               </div>
             </div>
 
             <div className="window-actions">
-              <div className="window-action-button">
-                <IconButton
-                  aria={Locale.Settings.Title}
-                  icon={<SettingsIcon />}
-                  bordered
-                  onClick={() => navigate(Path.Settings)}
-                />
-              </div>
+              {!isMobileScreen && (
+                <div className="window-action-button">
+                  <IconButton
+                    icon={<RenameIcon />}
+                    bordered
+                    title={Locale.Chat.EditMessage.Title}
+                    aria={Locale.Chat.EditMessage.Title}
+                    onClick={updateSessionTopic}
+                  />
+                </div>
+              )}
               {!isMobileScreen && (
                 <div className="window-action-button">
                   <IconButton
@@ -1124,6 +1262,12 @@ export function ImageChat() {
                     displayImages,
                   );
                   const deletedImages = message.deletedImages ?? 0;
+                  const showActions =
+                    message.status !== "loading" &&
+                    (displayContent.length > 0 ||
+                      displayImages.length > 0 ||
+                      deletedImages > 0 ||
+                      message.status === "error");
 
                   return (
                     <div
@@ -1134,6 +1278,29 @@ export function ImageChat() {
                       })}
                     >
                       <div className={chatStyles["chat-message-container"]}>
+                        {showActions && (
+                          <div className={chatStyles["chat-message-header"]}>
+                            <div className={chatStyles["chat-message-actions"]}>
+                              <div className={chatStyles["chat-input-actions"]}>
+                                <ImageChatAction
+                                  text={Locale.Chat.Actions.Retry}
+                                  icon={<ResetIcon />}
+                                  onClick={() => retryMessage(message)}
+                                />
+                                <ImageChatAction
+                                  text={Locale.Chat.Actions.Delete}
+                                  icon={<DeleteIcon />}
+                                  onClick={() => deleteMessage(message.id)}
+                                />
+                                <ImageChatAction
+                                  text={Locale.Chat.Actions.Copy}
+                                  icon={<CopyIcon />}
+                                  onClick={() => copyMessage(message)}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
                         {(displayContent || message.status === "error") && (
                           <div
                             className={clsx(chatStyles["chat-message-item"], {
@@ -1178,6 +1345,11 @@ export function ImageChat() {
                             {message.model}
                           </div>
                         )}
+                        <div
+                          className={chatStyles["chat-message-action-date"]}
+                        >
+                          {new Date(message.createdAt).toLocaleString()}
+                        </div>
                       </div>
                     </div>
                   );
@@ -1264,7 +1436,7 @@ export function ImageChat() {
                 type="primary"
                 disabled={generating || prompt.trim().length === 0}
                 className={chatStyles["chat-input-send"]}
-                onClick={sendPrompt}
+                onClick={() => sendPrompt()}
               />
             </div>
           </div>

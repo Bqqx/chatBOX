@@ -60,6 +60,16 @@
         margin-right: 10px;
       }
     }
+
+    .sidebar-bar-button-active {
+      border-color: var(--primary);
+      color: var(--primary);
+      background-color: rgba(29, 147, 171, 0.12);
+
+      svg {
+        color: var(--primary);
+      }
+    }
   }
 
   &:hover,
