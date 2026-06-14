@@ -1301,54 +1301,74 @@ export function ImageChat() {
                             </div>
                           </div>
                         )}
-                        {(displayContent || message.status === "error") && (
+                        <div
+                          className={clsx(styles["image-message-content"], {
+                            [styles["image-message-content-media"]]:
+                              displayImages.length > 0,
+                          })}
+                        >
+                          {(displayContent || message.status === "error") && (
+                            <div
+                              className={clsx(
+                                chatStyles["chat-message-item"],
+                                {
+                                  [styles.error]: message.status === "error",
+                                },
+                              )}
+                            >
+                              {displayContent}
+                            </div>
+                          )}
+                          {message.status === "loading" && !displayContent && (
+                            <div className={styles["message-meta"]}>
+                              {message.content || Locale.ImageChat.Generating}
+                            </div>
+                          )}
+                          {displayImages.length > 0 && (
+                            <div className={styles["image-grid"]}>
+                              {displayImages.map((image, index) => (
+                                <ImageResult
+                                  key={`${message.id}-${index}`}
+                                  image={image}
+                                />
+                              ))}
+                              {Array.from({ length: deletedImages }).map(
+                                (_, index) => (
+                                  <div
+                                    key={`${message.id}-deleted-${index}`}
+                                    className={styles["deleted-image"]}
+                                  >
+                                    图片已删除
+                                  </div>
+                                ),
+                              )}
+                            </div>
+                          )}
+                          {displayImages.length === 0 && deletedImages > 0 && (
+                            <div className={styles["deleted-image"]}>
+                              图片已删除
+                            </div>
+                          )}
                           <div
-                            className={clsx(chatStyles["chat-message-item"], {
-                              [styles.error]: message.status === "error",
+                            className={clsx(styles["message-footer"], {
+                              [styles["message-footer-with-model"]]:
+                                message.model && message.status !== "loading",
                             })}
                           >
-                            {displayContent}
-                          </div>
-                        )}
-                        {message.status === "loading" && !displayContent && (
-                          <div className={styles["message-meta"]}>
-                            {message.content || Locale.ImageChat.Generating}
-                          </div>
-                        )}
-                        {displayImages.length > 0 && (
-                          <div className={styles["image-grid"]}>
-                            {displayImages.map((image, index) => (
-                              <ImageResult
-                                key={`${message.id}-${index}`}
-                                image={image}
-                              />
-                            ))}
-                            {Array.from({ length: deletedImages }).map(
-                              (_, index) => (
-                                <div
-                                  key={`${message.id}-deleted-${index}`}
-                                  className={styles["deleted-image"]}
-                                >
-                                  图片已删除
-                                </div>
-                              ),
+                            {message.model && message.status !== "loading" && (
+                              <span className={styles["message-meta"]}>
+                                {message.model}
+                              </span>
                             )}
+                            <span
+                              className={clsx(
+                                chatStyles["chat-message-action-date"],
+                                styles["message-date"],
+                              )}
+                            >
+                              {new Date(message.createdAt).toLocaleString()}
+                            </span>
                           </div>
-                        )}
-                        {displayImages.length === 0 && deletedImages > 0 && (
-                          <div className={styles["deleted-image"]}>
-                            图片已删除
-                          </div>
-                        )}
-                        {message.model && message.status !== "loading" && (
-                          <div className={styles["message-meta"]}>
-                            {message.model}
-                          </div>
-                        )}
-                        <div
-                          className={chatStyles["chat-message-action-date"]}
-                        >
-                          {new Date(message.createdAt).toLocaleString()}
                         </div>
                       </div>
                     </div>

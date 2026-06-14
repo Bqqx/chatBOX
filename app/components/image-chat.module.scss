@@ -19,11 +19,50 @@
   margin-top: 6px;
 }
 
+.message-footer {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 6px;
+
+  .message-meta {
+    min-width: 0;
+    margin-top: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .message-date {
+    width: auto;
+    padding-right: 0;
+    flex: 0 0 auto;
+  }
+}
+
+.message-footer-with-model {
+  justify-content: space-between;
+}
+
+.image-message-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.image-message-content-media {
+  width: 560px;
+}
+
 .image-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 10px;
-  width: min(560px, 100%);
+  width: 100%;
 }
 
 .image-link {
