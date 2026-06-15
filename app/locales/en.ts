@@ -594,60 +594,6 @@ const en: LocaleType = {
       SubTitle:
         "A larger value decreasing the likelihood to repeat the same line",
     },
-    TTS: {
-      Enable: {
-        Title: "Enable TTS",
-        SubTitle: "Enable text-to-speech service",
-      },
-      Autoplay: {
-        Title: "Enable Autoplay",
-        SubTitle:
-          "Automatically generate speech and play, you need to enable the text-to-speech switch first",
-      },
-      Model: "Model",
-      Voice: {
-        Title: "Voice",
-        SubTitle: "The voice to use when generating the audio",
-      },
-      Speed: {
-        Title: "Speed",
-        SubTitle: "The speed of the generated audio",
-      },
-      Engine: "TTS Engine",
-    },
-    Realtime: {
-      Enable: {
-        Title: "Realtime Chat",
-        SubTitle: "Enable realtime chat feature",
-      },
-      Provider: {
-        Title: "Model Provider",
-        SubTitle: "Switch between different providers",
-      },
-      Model: {
-        Title: "Model",
-        SubTitle: "Select a model",
-      },
-      ApiKey: {
-        Title: "API Key",
-        SubTitle: "API Key",
-        Placeholder: "API Key",
-      },
-      Azure: {
-        Endpoint: {
-          Title: "Endpoint",
-          SubTitle: "Endpoint",
-        },
-        Deployment: {
-          Title: "Deployment Name",
-          SubTitle: "Deployment Name",
-        },
-      },
-      Temperature: {
-        Title: "Randomness (temperature)",
-        SubTitle: "Higher values result in more random responses",
-      },
-    },
   },
   Store: {
     DefaultTopic: "New Conversation",
@@ -693,7 +639,7 @@ const en: LocaleType = {
     Size: "Aspect Ratio",
     Count: "Count",
     NeedCustomRelay:
-      "Please enable Image API Settings, then fill in the image relay endpoint and API key.",
+      "Please fill in the image relay endpoint and API key in Settings.",
     Generating: "Generating image...",
     Error: "Generation failed",
     Settings: {

@@ -578,60 +578,6 @@ const ko: PartialLocaleType = {
       Title: "빈도 벌점 (frequency_penalty)",
       SubTitle: "값이 클수록 중복 단어 감소 가능성 높음",
     },
-    TTS: {
-      Enable: {
-        Title: "TTS 활성화",
-        SubTitle: "TTS 서비스 활성화",
-      },
-      Autoplay: {
-        Title: "자동 재생 활성화",
-        SubTitle:
-          "자동으로 음성을 생성하고 재생, 먼저 TTS 스위치를 활성화해야 함",
-      },
-      Model: "모델",
-      Voice: {
-        Title: "음성",
-        SubTitle: "음성을 생성할 때 사용할 음성",
-      },
-      Speed: {
-        Title: "속도",
-        SubTitle: "생성된 음성의 속도",
-      },
-      Engine: "TTS Engine",
-    },
-    Realtime: {
-      Enable: {
-        Title: "실시간 채팅",
-        SubTitle: "실시간 채팅 기능 활성화",
-      },
-      Provider: {
-        Title: "모델 제공업체",
-        SubTitle: "다른 제공업체 간 전환",
-      },
-      Model: {
-        Title: "모델",
-        SubTitle: "모델 선택",
-      },
-      ApiKey: {
-        Title: "API 키",
-        SubTitle: "API 키",
-        Placeholder: "API 키",
-      },
-      Azure: {
-        Endpoint: {
-          Title: "엔드포인트",
-          SubTitle: "엔드포인트",
-        },
-        Deployment: {
-          Title: "배포 이름",
-          SubTitle: "배포 이름",
-        },
-      },
-      Temperature: {
-        Title: "무작위성 (temperature)",
-        SubTitle: "값이 클수록 응답이 더 무작위적",
-      },
-    },
   },
   Store: {
     DefaultTopic: "새 채팅",

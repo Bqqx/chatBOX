@@ -587,59 +587,6 @@ const cn = {
       Title: "频率惩罚度 (frequency_penalty)",
       SubTitle: "值越大，越有可能降低重复字词",
     },
-    TTS: {
-      Enable: {
-        Title: "启用文本转语音",
-        SubTitle: "启用文本生成语音服务",
-      },
-      Autoplay: {
-        Title: "启用自动朗读",
-        SubTitle: "自动生成语音并播放，需先开启文本转语音开关",
-      },
-      Model: "模型",
-      Engine: "转换引擎",
-      Voice: {
-        Title: "声音",
-        SubTitle: "生成语音时使用的声音",
-      },
-      Speed: {
-        Title: "速度",
-        SubTitle: "生成语音的速度",
-      },
-    },
-    Realtime: {
-      Enable: {
-        Title: "实时聊天",
-        SubTitle: "开启实时聊天功能",
-      },
-      Provider: {
-        Title: "模型服务商",
-        SubTitle: "切换不同的服务商",
-      },
-      Model: {
-        Title: "模型",
-        SubTitle: "选择一个模型",
-      },
-      ApiKey: {
-        Title: "API Key",
-        SubTitle: "API Key",
-        Placeholder: "API Key",
-      },
-      Azure: {
-        Endpoint: {
-          Title: "接口地址",
-          SubTitle: "接口地址",
-        },
-        Deployment: {
-          Title: "部署名称",
-          SubTitle: "部署名称",
-        },
-      },
-      Temperature: {
-        Title: "随机性 (temperature)",
-        SubTitle: "值越大，回复越随机",
-      },
-    },
   },
   Store: {
     DefaultTopic: "新的聊天",
@@ -683,7 +630,7 @@ const cn = {
     Model: "生图模型",
     Size: "比例",
     Count: "张数",
-    NeedCustomRelay: "请先在设置里的“生图接口设置”启用生图自定义接口，并填写中转站接口地址和 API Key。",
+    NeedCustomRelay: "请先在设置里填写生图接口地址和 API Key。",
     Generating: "正在生成图片…",
     Error: "生成失败",
     Settings: {

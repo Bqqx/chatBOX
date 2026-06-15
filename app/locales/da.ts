@@ -554,59 +554,6 @@ const da: PartialLocaleType = {
       Title: "Gentagelsesstraf",
       SubTitle: "Jo højere tal, jo mindre gentagelse",
     },
-    TTS: {
-      Enable: {
-        Title: "Tænd for oplæsning (TTS)",
-        SubTitle: "Slå tekst-til-tale til",
-      },
-      Autoplay: {
-        Title: "Automatisk oplæsning",
-        SubTitle: "Laver lyd automatisk, hvis TTS er slået til",
-      },
-      Model: "Model",
-      Voice: {
-        Title: "Stemme",
-        SubTitle: "Hvilken stemme der bruges til lyd",
-      },
-      Speed: {
-        Title: "Hastighed",
-        SubTitle: "Hvor hurtigt der oplæses",
-      },
-      Engine: "TTS-motor",
-    },
-    Realtime: {
-      Enable: {
-        Title: "Live-chat",
-        SubTitle: "Slå live-svar til",
-      },
-      Provider: {
-        Title: "Modeludbyder",
-        SubTitle: "Vælg forskellig udbyder",
-      },
-      Model: {
-        Title: "Model",
-        SubTitle: "Vælg en model",
-      },
-      ApiKey: {
-        Title: "API-nøgle",
-        SubTitle: "Din nøgle",
-        Placeholder: "API-nøgle",
-      },
-      Azure: {
-        Endpoint: {
-          Title: "Adresse",
-          SubTitle: "Endpoint til Azure",
-        },
-        Deployment: {
-          Title: "Udrulningsnavn",
-          SubTitle: "Navn for dit Azure-setup",
-        },
-      },
-      Temperature: {
-        Title: "Temperatur",
-        SubTitle: "Højere tal = mere varierede svar",
-      },
-    },
   },
   Store: {
     DefaultTopic: "Ny samtale",

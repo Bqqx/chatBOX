@@ -73,7 +73,7 @@ const DEFAULT_ACCESS_STATE = {
   customApiKey: "",
 
   // image generation relay
-  imageUseCustomConfig: false,
+  imageUseCustomConfig: true,
   imageUrl: "",
   imageApiKey: "",
   imageModel: "gpt-image-1",
@@ -325,7 +325,9 @@ export const useAccessStore = createPersistStore(
       const state = persistedState as {
         imageNanoModel?: string;
         imageNanoModels?: string[];
+        imageUseCustomConfig?: boolean;
       };
+      state.imageUseCustomConfig = true;
       const normalizeNanoModel = (model: string) =>
         model === "[Rim] gemini-3-pro-image-preview"
           ? "「Rim」gemini-3-pro-image-preview"

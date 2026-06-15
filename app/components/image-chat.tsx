@@ -866,15 +866,10 @@ export function ImageChat() {
 
   const canUseImageRelay = useMemo(() => {
     return (
-      accessStore.imageUseCustomConfig &&
       accessStore.imageUrl.trim().length > 0 &&
       accessStore.imageApiKey.trim().length > 0
     );
-  }, [
-    accessStore.imageApiKey,
-    accessStore.imageUrl,
-    accessStore.imageUseCustomConfig,
-  ]);
+  }, [accessStore.imageApiKey, accessStore.imageUrl]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
