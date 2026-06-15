@@ -708,9 +708,12 @@ export function Settings() {
           type="checkbox"
           checked={accessStore.useCustomConfig}
           onChange={(e) =>
-            accessStore.update(
-              (access) => (access.useCustomConfig = e.currentTarget.checked),
-            )
+            accessStore.update((access) => {
+              access.useCustomConfig = e.currentTarget.checked;
+              if (e.currentTarget.checked) {
+                access.chatRelayEnabled = false;
+              }
+            })
           }
         ></input>
       </ListItem>
@@ -727,9 +730,12 @@ export function Settings() {
           type="checkbox"
           checked={accessStore.chatRelayEnabled}
           onChange={(e) =>
-            accessStore.update(
-              (access) => (access.chatRelayEnabled = e.currentTarget.checked),
-            )
+            accessStore.update((access) => {
+              access.chatRelayEnabled = e.currentTarget.checked;
+              if (e.currentTarget.checked) {
+                access.useCustomConfig = false;
+              }
+            })
           }
         ></input>
       </ListItem>

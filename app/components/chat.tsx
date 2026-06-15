@@ -395,6 +395,7 @@ export function ChatAction(props: {
   text: string;
   icon: JSX.Element;
   onClick: () => void;
+  hideText?: boolean;
 }) {
   const iconRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
@@ -406,13 +407,18 @@ export function ChatAction(props: {
   function updateWidth() {
     if (!iconRef.current || !textRef.current) return;
     const getWidth = (dom: HTMLDivElement) => dom.getBoundingClientRect().width;
-    const textWidth = getWidth(textRef.current);
+    const textWidth = props.hideText ? 0 : getWidth(textRef.current);
     const iconWidth = getWidth(iconRef.current);
     setWidth({
       full: textWidth + iconWidth,
       icon: iconWidth,
     });
   }
+
+  useEffect(() => {
+    requestAnimationFrame(updateWidth);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.text, props.hideText]);
 
   return (
     <div
@@ -433,7 +439,11 @@ export function ChatAction(props: {
       <div ref={iconRef} className={styles["icon"]}>
         {props.icon}
       </div>
-      <div className={styles["text"]} ref={textRef}>
+      <div
+        className={styles["text"]}
+        ref={textRef}
+        style={{ display: props.hideText ? "none" : undefined }}
+      >
         {props.text}
       </div>
     </div>
@@ -497,7 +507,11 @@ export function ChatActions(props: {
   const navigate = useNavigate();
   const chatStore = useChatStore();
   const pluginStore = usePluginStore();
+  const accessStore = useAccessStore();
   const session = chatStore.currentSession();
+  const chatRelayModelName = accessStore.chatRelayModel.trim();
+  const isChatRelayDisplayActive =
+    accessStore.chatRelayEnabled && chatRelayModelName.length > 0;
 
   // switch themes
   const theme = config.theme;
@@ -534,13 +548,23 @@ export function ChatActions(props: {
     }
   }, [allModels]);
   const currentModelName = useMemo(() => {
+    if (isChatRelayDisplayActive) {
+      return chatRelayModelName;
+    }
+
     const model = models.find(
       (m) =>
         m.name == currentModel &&
         m?.provider?.providerName == currentProviderName,
     );
-    return model?.displayName ?? "";
-  }, [models, currentModel, currentProviderName]);
+    return model?.displayName ?? currentModel;
+  }, [
+    chatRelayModelName,
+    currentModel,
+    currentProviderName,
+    isChatRelayDisplayActive,
+    models,
+  ]);
   const [showModelSelector, setShowModelSelector] = useState(false);
   const [showPluginSelector, setShowPluginSelector] = useState(false);
   const [showUploadImage, setShowUploadImage] = useState(false);
@@ -569,7 +593,7 @@ export function ChatActions(props: {
     // if current model is not available
     // switch to first available model
     const isUnavailableModel = !models.some((m) => m.name === currentModel);
-    if (isUnavailableModel && models.length > 0) {
+    if (!isChatRelayDisplayActive && isUnavailableModel && models.length > 0) {
       // show next model to default model if exist
       let nextModel = models.find((model) => model.isDefault) || models[0];
       chatStore.updateTargetSession(session, (session) => {
@@ -583,7 +607,7 @@ export function ChatActions(props: {
           : nextModel.name,
       );
     }
-  }, [chatStore, currentModel, models, session]);
+  }, [chatStore, currentModel, isChatRelayDisplayActive, models, session]);
 
   return (
     <div className={styles["chat-input-actions"]}>
@@ -663,12 +687,19 @@ export function ChatActions(props: {
         />
 
         <ChatAction
-          onClick={() => setShowModelSelector(true)}
+          key={`model-action-${currentModelName}`}
+          onClick={() => {
+            if (isChatRelayDisplayActive) {
+              showToast("当前使用聊天中转站模型");
+              return;
+            }
+            setShowModelSelector(true);
+          }}
           text={currentModelName}
           icon={<RobotIcon />}
         />
 
-        {showModelSelector && (
+        {!isChatRelayDisplayActive && showModelSelector && (
           <Selector
             defaultSelectedValue={`${currentModel}@${currentProviderName}`}
             items={models.map((m) => ({
@@ -1265,6 +1296,9 @@ function _Chat() {
   };
 
   const accessStore = useAccessStore();
+  const chatRelayModelName = accessStore.chatRelayModel.trim();
+  const isChatRelayDisplayActive =
+    accessStore.chatRelayEnabled && chatRelayModelName.length > 0;
   const context: RenderMessage[] = useMemo(() => {
     return session.mask.hideContext ? [] : session.mask.context.slice();
   }, [session.mask.context, session.mask.hideContext]);
@@ -1282,21 +1316,19 @@ function _Chat() {
 
   // preview messages
   const renderMessages = useMemo(() => {
-    return context
-      .concat(session.messages as RenderMessage[])
-      .concat(
-        isLoading
-          ? [
-              {
-                ...createMessage({
-                  role: "assistant",
-                  content: "……",
-                }),
-                preview: true,
-              },
-            ]
-          : [],
-      );
+    return context.concat(session.messages as RenderMessage[]).concat(
+      isLoading
+        ? [
+            {
+              ...createMessage({
+                role: "assistant",
+                content: "……",
+              }),
+              preview: true,
+            },
+          ]
+        : [],
+    );
   }, [context, isLoading, session.messages]);
 
   const [msgRenderIndex, _setMsgRenderIndex] = useState(
@@ -1700,6 +1732,10 @@ function _Chat() {
                 .map((message, i) => {
                   const isUser = message.role === "user";
                   const isContext = i < context.length;
+                  const displayMessageModel =
+                    !isUser && isChatRelayDisplayActive
+                      ? chatRelayModelName
+                      : message.model;
                   const showActions =
                     i > 0 &&
                     !(message.preview || message.content.length === 0) &&
@@ -1770,7 +1806,7 @@ function _Chat() {
                                     <MaskAvatar
                                       avatar={session.mask.avatar}
                                       model={
-                                        message.model ||
+                                        displayMessageModel ||
                                         session.mask.modelConfig.model
                                       }
                                     />
@@ -1780,7 +1816,7 @@ function _Chat() {
                             </div>
                             {!isUser && (
                               <div className={styles["chat-model-name"]}>
-                                {message.model}
+                                {displayMessageModel}
                               </div>
                             )}
 

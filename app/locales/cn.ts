@@ -546,8 +546,8 @@ const cn = {
         },
       },
       CustomModel: {
-        Title: "自定义模型名",
-        SubTitle: "增加自定义模型可选项，使用英文逗号隔开",
+        Title: "官方 API 自定义模型名",
+        SubTitle: "给官方 API / 普通会话模型下拉框增加选项，使用英文逗号隔开",
       },
       AI302: {
         ApiKey: {
@@ -562,7 +562,7 @@ const cn = {
       },
     },
 
-    Model: "模型 (model)",
+    Model: "官方 API 模型 (model)",
     CompressModel: {
       Title: "对话摘要模型",
       SubTitle: "用于压缩历史记录、生成对话标题的模型",
