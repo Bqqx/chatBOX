@@ -86,10 +86,29 @@ export class ChatGPTApi implements LLMApi {
 
     let baseUrl = "";
 
+    const isChatRelay =
+      accessStore.chatRelayEnabled &&
+      accessStore.chatRelayUrl.trim().length > 0 &&
+      accessStore.chatRelayApiKey.trim().length > 0 &&
+      accessStore.chatRelayModel.trim().length > 0;
     const isAzure = path.includes("deployments");
     const isCustom =
       accessStore.useCustomConfig &&
       accessStore.provider === ServiceProvider.Custom;
+
+    if (isChatRelay) {
+      const endpoint = resolveCustomOpenAIEndpoint(
+        accessStore.chatRelayUrl,
+        path,
+      );
+      const isApp = !!getClientConfig()?.isApp;
+
+      if (isApp) {
+        return endpoint.url;
+      }
+
+      return `/api/proxy/${endpoint.path}`;
+    }
 
     if (isCustom) {
       const endpoint = resolveCustomOpenAIEndpoint(accessStore.customUrl, path);
@@ -182,7 +201,7 @@ export class ChatGPTApi implements LLMApi {
       options.config.model.startsWith("o1") ||
       options.config.model.startsWith("o3") ||
       options.config.model.startsWith("o4-mini");
-    const isGpt5 =  options.config.model.startsWith("gpt-5");
+    const isGpt5 = options.config.model.startsWith("gpt-5");
     if (isDalle3) {
       const prompt = getMessageTextContent(
         options.messages.slice(-1)?.pop() as any,
@@ -209,11 +228,19 @@ export class ChatGPTApi implements LLMApi {
       }
 
       // O1 not support image, tools (plugin in ChatGPTNextWeb) and system, stream, logprobs, temperature, top_p, n, presence_penalty, frequency_penalty yet.
+      const accessStore = useAccessStore.getState();
+      const relayModel =
+        accessStore.chatRelayEnabled &&
+        accessStore.chatRelayUrl.trim() &&
+        accessStore.chatRelayApiKey.trim() &&
+        accessStore.chatRelayModel.trim()
+          ? accessStore.chatRelayModel.trim()
+          : modelConfig.model;
       requestPayload = {
         messages,
         stream: options.config.stream,
-        model: modelConfig.model,
-        temperature: (!isO1OrO3 && !isGpt5) ? modelConfig.temperature : 1,
+        model: relayModel,
+        temperature: !isO1OrO3 && !isGpt5 ? modelConfig.temperature : 1,
         presence_penalty: !isO1OrO3 ? modelConfig.presence_penalty : 0,
         frequency_penalty: !isO1OrO3 ? modelConfig.frequency_penalty : 0,
         top_p: !isO1OrO3 ? modelConfig.top_p : 1,
@@ -222,11 +249,10 @@ export class ChatGPTApi implements LLMApi {
       };
 
       if (isGpt5) {
-  	// Remove max_tokens if present
-  	delete requestPayload.max_tokens;
-  	// Add max_completion_tokens (or max_completion_tokens if that's what you meant)
-  	requestPayload["max_completion_tokens"] = modelConfig.max_tokens;
-
+        // Remove max_tokens if present
+        delete requestPayload.max_tokens;
+        // Add max_completion_tokens (or max_completion_tokens if that's what you meant)
+        requestPayload["max_completion_tokens"] = modelConfig.max_tokens;
       } else if (isO1OrO3) {
         // by default the o1/o3 models will not attempt to produce output that includes markdown formatting
         // manually add "Formatting re-enabled" developer message to encourage markdown inclusion in model responses
@@ -240,9 +266,8 @@ export class ChatGPTApi implements LLMApi {
         requestPayload["max_completion_tokens"] = modelConfig.max_tokens;
       }
 
-
       // add max_tokens to vision model
-      if (visionModel && !isO1OrO3 && ! isGpt5) {
+      if (visionModel && !isO1OrO3 && !isGpt5) {
         requestPayload["max_tokens"] = Math.max(modelConfig.max_tokens, 4000);
       }
     }

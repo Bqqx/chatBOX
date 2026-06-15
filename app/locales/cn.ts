@@ -324,8 +324,8 @@ const cn = {
         Placeholder: "请输入访问密码",
       },
       CustomEndpoint: {
-        Title: "自定义接口",
-        SubTitle: "是否使用自定义 Azure 或 OpenAI 服务",
+        Title: "使用官方API",
+        SubTitle: "填入官方URL和API Key使用官方服务",
       },
       Provider: {
         Title: "模型服务商",

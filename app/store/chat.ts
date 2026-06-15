@@ -451,10 +451,24 @@ export const useChatStore = createPersistStore(
           isMcpResponse,
         });
 
+        const accessStore = useAccessStore.getState();
+        const isChatRelay =
+          accessStore.chatRelayEnabled &&
+          accessStore.chatRelayUrl.trim().length > 0 &&
+          accessStore.chatRelayApiKey.trim().length > 0 &&
+          accessStore.chatRelayModel.trim().length > 0;
+        const requestModelConfig = isChatRelay
+          ? {
+              ...modelConfig,
+              model: accessStore.chatRelayModel.trim() as ModelType,
+              providerName: ServiceProvider.OpenAI,
+            }
+          : modelConfig;
+
         const botMessage: ChatMessage = createMessage({
           role: "assistant",
           streaming: true,
-          model: modelConfig.model,
+          model: requestModelConfig.model,
         });
 
         // get recent messages
@@ -474,11 +488,11 @@ export const useChatStore = createPersistStore(
           ]);
         });
 
-        const api: ClientApi = getClientApi(modelConfig.providerName);
+        const api: ClientApi = getClientApi(requestModelConfig.providerName);
         // make request
         api.llm.chat({
           messages: sendMessages,
-          config: { ...modelConfig, stream: true },
+          config: { ...requestModelConfig, stream: true },
           onUpdate(message) {
             botMessage.streaming = true;
             if (message) {

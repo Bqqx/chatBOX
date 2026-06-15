@@ -286,6 +286,11 @@ export function getHeaders(ignoreHeaders: boolean = false) {
   const clientConfig = getClientConfig();
 
   function getConfig() {
+    const isChatRelay =
+      accessStore.chatRelayEnabled &&
+      validString(accessStore.chatRelayUrl) &&
+      validString(accessStore.chatRelayApiKey) &&
+      validString(accessStore.chatRelayModel);
     const modelConfig = chatStore.currentSession().mask.modelConfig;
     const isGoogle = modelConfig.providerName === ServiceProvider.Google;
     const isAzure = modelConfig.providerName === ServiceProvider.Azure;
@@ -305,7 +310,9 @@ export function getHeaders(ignoreHeaders: boolean = false) {
       accessStore.useCustomConfig &&
       accessStore.provider === ServiceProvider.Custom;
     const isEnabledAccessControl = accessStore.enabledAccessControl();
-    const apiKey = isCustom
+    const apiKey = isChatRelay
+      ? accessStore.chatRelayApiKey
+      : isCustom
       ? accessStore.customApiKey
       : isGoogle
       ? accessStore.googleApiKey
@@ -348,6 +355,7 @@ export function getHeaders(ignoreHeaders: boolean = false) {
       isChatGLM,
       isSiliconFlow,
       isAI302,
+      isChatRelay,
       isCustom,
       apiKey,
       isEnabledAccessControl,
@@ -355,7 +363,9 @@ export function getHeaders(ignoreHeaders: boolean = false) {
   }
 
   function getAuthHeader(): string {
-    return isAzure
+    return isChatRelay
+      ? "Authorization"
+      : isAzure
       ? "api-key"
       : isAnthropic
       ? "x-api-key"
@@ -378,6 +388,7 @@ export function getHeaders(ignoreHeaders: boolean = false) {
     isChatGLM,
     isSiliconFlow,
     isAI302,
+    isChatRelay,
     isCustom,
     apiKey,
     isEnabledAccessControl,
@@ -389,7 +400,7 @@ export function getHeaders(ignoreHeaders: boolean = false) {
 
   const bearerToken = getBearerToken(
     apiKey,
-    isAzure || isAnthropic || isGoogle,
+    !isChatRelay && (isAzure || isAnthropic || isGoogle),
   );
 
   if (bearerToken) {
@@ -408,7 +419,17 @@ export function getHeaders(ignoreHeaders: boolean = false) {
     validString(accessStore.openaiUrl) &&
     normalizeApiBaseUrl(accessStore.openaiUrl).startsWith("http");
 
-  if (isCustom && !clientConfig?.isApp && validString(accessStore.customUrl)) {
+  if (
+    isChatRelay &&
+    !clientConfig?.isApp &&
+    validString(accessStore.chatRelayUrl)
+  ) {
+    headers["x-base-url"] = normalizeApiBaseUrl(accessStore.chatRelayUrl);
+  } else if (
+    isCustom &&
+    !clientConfig?.isApp &&
+    validString(accessStore.customUrl)
+  ) {
     headers["x-base-url"] = normalizeApiBaseUrl(accessStore.customUrl);
   } else if (shouldProxyCustomOpenAI) {
     headers["x-base-url"] = normalizeApiBaseUrl(accessStore.openaiUrl);
@@ -418,6 +439,16 @@ export function getHeaders(ignoreHeaders: boolean = false) {
 }
 
 export function getClientApi(provider: ServiceProvider): ClientApi {
+  const accessStore = useAccessStore.getState();
+  if (
+    accessStore.chatRelayEnabled &&
+    validString(accessStore.chatRelayUrl) &&
+    validString(accessStore.chatRelayApiKey) &&
+    validString(accessStore.chatRelayModel)
+  ) {
+    return new ClientApi(ModelProvider.GPT);
+  }
+
   switch (provider) {
     case ServiceProvider.Google:
       return new ClientApi(ModelProvider.GeminiPro);

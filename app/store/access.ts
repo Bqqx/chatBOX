@@ -72,6 +72,12 @@ const DEFAULT_ACCESS_STATE = {
   customUrl: "",
   customApiKey: "",
 
+  // chat relay, OpenAI-compatible
+  chatRelayEnabled: false,
+  chatRelayUrl: "",
+  chatRelayApiKey: "",
+  chatRelayModel: "",
+
   // image generation relay
   imageUseCustomConfig: true,
   imageUrl: "",
@@ -195,6 +201,14 @@ export const useAccessStore = createPersistStore(
       return ensure(get(), ["customUrl", "customApiKey"]);
     },
 
+    isValidChatRelay() {
+      return ensure(get(), [
+        "chatRelayUrl",
+        "chatRelayApiKey",
+        "chatRelayModel",
+      ]);
+    },
+
     isValidImage() {
       return ensure(get(), ["imageUrl", "imageApiKey"]);
     },
@@ -256,6 +270,7 @@ export const useAccessStore = createPersistStore(
       return (
         this.isValidOpenAI() ||
         this.isValidCustom() ||
+        this.isValidChatRelay() ||
         this.isValidImage() ||
         this.isValidAzure() ||
         this.isValidGoogle() ||
@@ -323,10 +338,34 @@ export const useAccessStore = createPersistStore(
       }
 
       const state = persistedState as {
+        provider?: ServiceProvider;
+        customUrl?: string;
+        customApiKey?: string;
+        customModels?: string;
+        chatRelayEnabled?: boolean;
+        chatRelayUrl?: string;
+        chatRelayApiKey?: string;
+        chatRelayModel?: string;
         imageNanoModel?: string;
         imageNanoModels?: string[];
         imageUseCustomConfig?: boolean;
       };
+
+      if (state.provider === ServiceProvider.Custom) {
+        state.chatRelayEnabled = true;
+        state.chatRelayUrl = state.chatRelayUrl || state.customUrl || "";
+        state.chatRelayApiKey =
+          state.chatRelayApiKey || state.customApiKey || "";
+        state.chatRelayModel =
+          state.chatRelayModel ||
+          state.customModels
+            ?.split(",")
+            .find((model) => model.trim())
+            ?.trim() ||
+          "";
+        state.provider = ServiceProvider.OpenAI;
+      }
+
       state.imageUseCustomConfig = true;
       const normalizeNanoModel = (model: string) =>
         model === "[Rim] gemini-3-pro-image-preview"

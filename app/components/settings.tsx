@@ -611,11 +611,12 @@ export function Settings() {
 
     return (
       accessStore.hideBalanceQuery ||
+      accessStore.chatRelayEnabled ||
       isOpenAiUrl ||
-      accessStore.provider === ServiceProvider.Azure ||
-      accessStore.provider === ServiceProvider.Custom
+      accessStore.provider === ServiceProvider.Azure
     );
   }, [
+    accessStore.chatRelayEnabled,
     accessStore.hideBalanceQuery,
     accessStore.openaiUrl,
     accessStore.provider,
@@ -715,42 +716,74 @@ export function Settings() {
       </ListItem>
     );
 
-  const customConfigComponent = accessStore.provider ===
-    ServiceProvider.Custom && (
+  const chatRelayConfigComponent = (
     <>
       <ListItem
-        title={Locale.Settings.Access.Custom.Endpoint.Title}
-        subTitle={Locale.Settings.Access.Custom.Endpoint.SubTitle}
+        title="聊天中转站"
+        subTitle="使用 OpenAI 兼容的中转站 URL、Key 和模型名"
       >
         <input
-          aria-label={Locale.Settings.Access.Custom.Endpoint.Title}
-          type="text"
-          value={accessStore.customUrl}
-          placeholder=""
+          aria-label="聊天中转站"
+          type="checkbox"
+          checked={accessStore.chatRelayEnabled}
           onChange={(e) =>
             accessStore.update(
-              (access) => (access.customUrl = e.currentTarget.value),
+              (access) => (access.chatRelayEnabled = e.currentTarget.checked),
             )
           }
         ></input>
       </ListItem>
-      <ListItem
-        title={Locale.Settings.Access.Custom.ApiKey.Title}
-        subTitle={Locale.Settings.Access.Custom.ApiKey.SubTitle}
-      >
-        <PasswordInput
-          aria={Locale.Settings.ShowPassword}
-          aria-label={Locale.Settings.Access.Custom.ApiKey.Title}
-          value={accessStore.customApiKey}
-          type="text"
-          placeholder={Locale.Settings.Access.Custom.ApiKey.Placeholder}
-          onChange={(e) => {
-            accessStore.update(
-              (access) => (access.customApiKey = e.currentTarget.value),
-            );
-          }}
-        />
-      </ListItem>
+
+      {accessStore.chatRelayEnabled && (
+        <>
+          <ListItem
+            title="中转站接口地址"
+            subTitle="填写 OpenAI 兼容的中转站 API 地址，必须包含 http(s)://"
+          >
+            <input
+              aria-label="中转站接口地址"
+              type="text"
+              value={accessStore.chatRelayUrl}
+              placeholder="https://example.com"
+              onChange={(e) =>
+                accessStore.update(
+                  (access) => (access.chatRelayUrl = e.currentTarget.value),
+                )
+              }
+            ></input>
+          </ListItem>
+          <ListItem title="中转站 API Key" subTitle="仅用于聊天中转站请求">
+            <PasswordInput
+              aria={Locale.Settings.ShowPassword}
+              aria-label="中转站 API Key"
+              value={accessStore.chatRelayApiKey}
+              type="text"
+              placeholder="中转站 API Key"
+              onChange={(e) => {
+                accessStore.update(
+                  (access) => (access.chatRelayApiKey = e.currentTarget.value),
+                );
+              }}
+            />
+          </ListItem>
+          <ListItem
+            title="中转模型名"
+            subTitle="填写中转站要求的模型名，例如 [YS] grok-4.20-fast"
+          >
+            <input
+              aria-label="中转模型名"
+              type="text"
+              value={accessStore.chatRelayModel}
+              placeholder="model-name"
+              onChange={(e) =>
+                accessStore.update(
+                  (access) => (access.chatRelayModel = e.currentTarget.value),
+                )
+              }
+            ></input>
+          </ListItem>
+        </>
+      )}
     </>
   );
 
@@ -1475,44 +1508,44 @@ export function Settings() {
     </>
   );
 
-  const ai302ConfigComponent = accessStore.provider === ServiceProvider["302.AI"] && (
+  const ai302ConfigComponent = accessStore.provider ===
+    ServiceProvider["302.AI"] && (
     <>
       <ListItem
-          title={Locale.Settings.Access.AI302.Endpoint.Title}
-          subTitle={
-            Locale.Settings.Access.AI302.Endpoint.SubTitle +
-            AI302.ExampleEndpoint
+        title={Locale.Settings.Access.AI302.Endpoint.Title}
+        subTitle={
+          Locale.Settings.Access.AI302.Endpoint.SubTitle + AI302.ExampleEndpoint
+        }
+      >
+        <input
+          aria-label={Locale.Settings.Access.AI302.Endpoint.Title}
+          type="text"
+          value={accessStore.ai302Url}
+          placeholder={AI302.ExampleEndpoint}
+          onChange={(e) =>
+            accessStore.update(
+              (access) => (access.ai302Url = e.currentTarget.value),
+            )
           }
-        >
-          <input
-            aria-label={Locale.Settings.Access.AI302.Endpoint.Title}
-            type="text"
-            value={accessStore.ai302Url}
-            placeholder={AI302.ExampleEndpoint}
-            onChange={(e) =>
-              accessStore.update(
-                (access) => (access.ai302Url = e.currentTarget.value),
-              )
-            }
-          ></input>
-        </ListItem>
-        <ListItem
-          title={Locale.Settings.Access.AI302.ApiKey.Title}
-          subTitle={Locale.Settings.Access.AI302.ApiKey.SubTitle}
-        >
-          <PasswordInput
-            aria-label={Locale.Settings.Access.AI302.ApiKey.Title}
-            value={accessStore.ai302ApiKey}
-            type="text"
-            placeholder={Locale.Settings.Access.AI302.ApiKey.Placeholder}
-            onChange={(e) => {
-              accessStore.update(
-                (access) => (access.ai302ApiKey = e.currentTarget.value),
-              );
-            }}
-          />
-        </ListItem>
-      </>
+        ></input>
+      </ListItem>
+      <ListItem
+        title={Locale.Settings.Access.AI302.ApiKey.Title}
+        subTitle={Locale.Settings.Access.AI302.ApiKey.SubTitle}
+      >
+        <PasswordInput
+          aria-label={Locale.Settings.Access.AI302.ApiKey.Title}
+          value={accessStore.ai302ApiKey}
+          type="text"
+          placeholder={Locale.Settings.Access.AI302.ApiKey.Placeholder}
+          onChange={(e) => {
+            accessStore.update(
+              (access) => (access.ai302ApiKey = e.currentTarget.value),
+            );
+          }}
+        />
+      </ListItem>
+    </>
   );
 
   return (
@@ -1793,6 +1826,7 @@ export function Settings() {
 
           {!accessStore.hideUserApiKey && (
             <>
+              {chatRelayConfigComponent}
               {useCustomConfigComponent}
 
               {accessStore.useCustomConfig && (
@@ -1803,7 +1837,11 @@ export function Settings() {
                   >
                     <Select
                       aria-label={Locale.Settings.Access.Provider.Title}
-                      value={accessStore.provider}
+                      value={
+                        accessStore.provider === ServiceProvider.Custom
+                          ? ServiceProvider.OpenAI
+                          : accessStore.provider
+                      }
                       onChange={(e) => {
                         accessStore.update(
                           (access) =>
@@ -1812,15 +1850,16 @@ export function Settings() {
                         );
                       }}
                     >
-                      {Object.entries(ServiceProvider).map(([k, v]) => (
-                        <option value={v} key={k}>
-                          {v === ServiceProvider.Custom ? "自定义" : k}
-                        </option>
-                      ))}
+                      {Object.entries(ServiceProvider)
+                        .filter(([, v]) => v !== ServiceProvider.Custom)
+                        .map(([k, v]) => (
+                          <option value={v} key={k}>
+                            {k}
+                          </option>
+                        ))}
                     </Select>
                   </ListItem>
 
-                  {customConfigComponent}
                   {openAIConfigComponent}
                   {azureConfigComponent}
                   {googleConfigComponent}
@@ -1898,71 +1937,70 @@ export function Settings() {
         </List>
 
         <List>
-              <ListItem
-                title={Locale.ImageChat.Settings.Endpoint.Title}
-                subTitle={Locale.ImageChat.Settings.Endpoint.SubTitle}
-              >
-                <input
-                  aria-label={Locale.ImageChat.Settings.Endpoint.Title}
-                  type="text"
-                  value={accessStore.imageUrl}
-                  placeholder=""
-                  onChange={(e) =>
-                    accessStore.update(
-                      (access) => (access.imageUrl = e.currentTarget.value),
-                    )
-                  }
-                ></input>
-              </ListItem>
-              <ListItem
-                title={Locale.ImageChat.Settings.ApiKey.Title}
-                subTitle={Locale.ImageChat.Settings.ApiKey.SubTitle}
-              >
-                <PasswordInput
-                  aria={Locale.Settings.ShowPassword}
-                  aria-label={Locale.ImageChat.Settings.ApiKey.Title}
-                  value={accessStore.imageApiKey}
-                  type="text"
-                  placeholder={Locale.ImageChat.Settings.ApiKey.Placeholder}
-                  onChange={(e) => {
-                    accessStore.update(
-                      (access) =>
-                        (access.imageApiKey = e.currentTarget.value),
-                    );
-                  }}
-                />
-              </ListItem>
-              <ListItem title="生图类型" subTitle="选择当前默认使用的生图接口格式">
-                <Select
-                  aria-label="生图类型"
-                  value={
-                    IMAGE_ENGINE_OPTIONS.includes(
-                      accessStore.imageEngine as ImageEngine,
-                    )
-                      ? accessStore.imageEngine
-                      : "Nanobanana"
-                  }
-                  onChange={(e) => {
-                    const nextEngine = e.currentTarget.value as ImageEngine;
-                    accessStore.update((access) => {
-                      const nextModel =
-                        (nextEngine === "Nanobanana"
-                          ? access.imageNanoModel
-                          : access.imageChatGPTModel) ||
-                        getDefaultImageModel(nextEngine);
-                      access.imageEngine = nextEngine;
-                      access.imageModel = nextModel;
-                      access.imageUseCustomConfig = true;
-                    });
-                  }}
-                >
-                  {IMAGE_ENGINE_OPTIONS.map((engine) => (
-                    <option key={engine} value={engine}>
-                      {engine}
-                    </option>
-                  ))}
-                </Select>
-              </ListItem>
+          <ListItem
+            title={Locale.ImageChat.Settings.Endpoint.Title}
+            subTitle={Locale.ImageChat.Settings.Endpoint.SubTitle}
+          >
+            <input
+              aria-label={Locale.ImageChat.Settings.Endpoint.Title}
+              type="text"
+              value={accessStore.imageUrl}
+              placeholder=""
+              onChange={(e) =>
+                accessStore.update(
+                  (access) => (access.imageUrl = e.currentTarget.value),
+                )
+              }
+            ></input>
+          </ListItem>
+          <ListItem
+            title={Locale.ImageChat.Settings.ApiKey.Title}
+            subTitle={Locale.ImageChat.Settings.ApiKey.SubTitle}
+          >
+            <PasswordInput
+              aria={Locale.Settings.ShowPassword}
+              aria-label={Locale.ImageChat.Settings.ApiKey.Title}
+              value={accessStore.imageApiKey}
+              type="text"
+              placeholder={Locale.ImageChat.Settings.ApiKey.Placeholder}
+              onChange={(e) => {
+                accessStore.update(
+                  (access) => (access.imageApiKey = e.currentTarget.value),
+                );
+              }}
+            />
+          </ListItem>
+          <ListItem title="生图类型" subTitle="选择当前默认使用的生图接口格式">
+            <Select
+              aria-label="生图类型"
+              value={
+                IMAGE_ENGINE_OPTIONS.includes(
+                  accessStore.imageEngine as ImageEngine,
+                )
+                  ? accessStore.imageEngine
+                  : "Nanobanana"
+              }
+              onChange={(e) => {
+                const nextEngine = e.currentTarget.value as ImageEngine;
+                accessStore.update((access) => {
+                  const nextModel =
+                    (nextEngine === "Nanobanana"
+                      ? access.imageNanoModel
+                      : access.imageChatGPTModel) ||
+                    getDefaultImageModel(nextEngine);
+                  access.imageEngine = nextEngine;
+                  access.imageModel = nextModel;
+                  access.imageUseCustomConfig = true;
+                });
+              }}
+            >
+              {IMAGE_ENGINE_OPTIONS.map((engine) => (
+                <option key={engine} value={engine}>
+                  {engine}
+                </option>
+              ))}
+            </Select>
+          </ListItem>
         </List>
 
         {shouldShowPromptModal && (
