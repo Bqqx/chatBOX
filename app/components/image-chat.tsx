@@ -354,7 +354,11 @@ function ImageResult(props: {
 }) {
   const { resource } = props;
   const image = resource.image;
-  const [imageUrl, setImageUrl] = useState(image);
+  const [imageUrl, setImageUrl] = useState(() =>
+    image.startsWith("data:image/")
+      ? imageBlobUrlCache.get(image) ?? ""
+      : image,
+  );
 
   useEffect(() => {
     if (!image.startsWith("data:image/")) {
@@ -362,15 +366,14 @@ function ImageResult(props: {
       return;
     }
 
-    setImageUrl(image);
-    const buildBlobUrl = () => setImageUrl(dataUrlToBlobUrl(image));
-    if ("requestIdleCallback" in window) {
-      const idleId = window.requestIdleCallback(buildBlobUrl, {
-        timeout: 1200,
-      });
-      return () => window.cancelIdleCallback(idleId);
+    const cachedUrl = imageBlobUrlCache.get(image);
+    if (cachedUrl) {
+      setImageUrl(cachedUrl);
+      return;
     }
 
+    setImageUrl("");
+    const buildBlobUrl = () => setImageUrl(dataUrlToBlobUrl(image));
     const timer = globalThis.setTimeout(buildBlobUrl, 0);
     return () => globalThis.clearTimeout(timer);
   }, [image]);
@@ -383,14 +386,21 @@ function ImageResult(props: {
       rel="noreferrer"
       onClick={(event) => {
         event.preventDefault();
+        if (!imageUrl) return;
         props.onOpen(resource);
       }}
     >
-      <img
-        className={styles["image-result"]}
-        src={imageUrl}
-        alt={Locale.ImageChat.Title}
-      />
+      {imageUrl ? (
+        <img
+          className={styles["image-result"]}
+          src={imageUrl}
+          alt={Locale.ImageChat.Title}
+          loading="lazy"
+          decoding="async"
+        />
+      ) : (
+        <div className={styles["image-result-placeholder"]}>图片加载中...</div>
+      )}
     </a>
   );
 }
@@ -834,15 +844,31 @@ export function ImageChat() {
   const favoritePrompts = imageChatStore.favoritePrompts ?? [];
   const showMobileDetail =
     !isMobileScreen || (location.state as { showDetail?: boolean })?.showDetail;
-  const sessionImageResources = useMemo(
+  const renderedMessages = useMemo(
     () =>
-      messages.flatMap((message) => {
+      messages.map((message) => {
         const displayImages = normalizeImageSources(
           message.images && message.images.length > 0
             ? message.images
             : extractImageUrlsFromText(message.content),
         );
+        const displayContent = getDisplayContent(
+          message.content,
+          displayImages,
+        );
 
+        return {
+          message,
+          displayImages,
+          displayContent,
+          deletedImages: message.deletedImages ?? 0,
+        };
+      }),
+    [messages],
+  );
+  const sessionImageResources = useMemo(
+    () =>
+      renderedMessages.flatMap(({ message, displayImages }) => {
         return displayImages.map((image, index) => ({
           id: `${session.id}-${message.id}-${index}`,
           sessionId: session.id,
@@ -853,7 +879,7 @@ export function ImageChat() {
           createdAt: message.createdAt,
         }));
       }),
-    [messages, session.id, session.topic],
+    [renderedMessages, session.id, session.topic],
   );
 
   const canUseImageRelay = useMemo(() => {
@@ -1264,184 +1290,184 @@ export function ImageChat() {
                 {messages.length === 0 ? (
                   <div className={styles.empty}>{Locale.ImageChat.Empty}</div>
                 ) : (
-                  messages.map((message) => {
-                    const displayImages = normalizeImageSources(
-                      message.images && message.images.length > 0
-                        ? message.images
-                        : extractImageUrlsFromText(message.content),
-                    );
-                    const displayContent = getDisplayContent(
-                      message.content,
+                  renderedMessages.map(
+                    ({
+                      message,
                       displayImages,
-                    );
-                    const deletedImages = message.deletedImages ?? 0;
-                    const showActions =
-                      message.status !== "loading" &&
-                      (displayContent.length > 0 ||
-                        displayImages.length > 0 ||
-                        deletedImages > 0 ||
-                        message.status === "error");
-                    const showPromptActions =
-                      showActions &&
-                      message.role === "user" &&
-                      activePromptActionsId === message.id;
+                      displayContent,
+                      deletedImages,
+                    }) => {
+                      const showActions =
+                        message.status !== "loading" &&
+                        (displayContent.length > 0 ||
+                          displayImages.length > 0 ||
+                          deletedImages > 0 ||
+                          message.status === "error");
+                      const showPromptActions =
+                        showActions &&
+                        message.role === "user" &&
+                        activePromptActionsId === message.id;
 
-                    return (
-                      <div
-                        key={message.id}
-                        className={clsx(chatStyles["chat-message"], {
-                          [chatStyles["chat-message-user"]]:
-                            message.role === "user",
-                        })}
-                      >
-                        <div className={chatStyles["chat-message-container"]}>
-                          {showActions && message.role !== "user" && (
-                            <div className={styles["image-message-actions"]}>
-                              <ImageChatAction
-                                text="从对话移除"
-                                onClick={() => hideMessage(message.id)}
-                              />
-                            </div>
-                          )}
-                          <div
-                            className={clsx(styles["image-message-content"], {
-                              [styles["image-message-content-media"]]:
-                                displayImages.length > 0,
-                            })}
-                          >
-                            {(displayContent || message.status === "error") && (
-                              <div
-                                className={clsx({
-                                  [styles["prompt-action-scope"]]:
-                                    message.role === "user",
-                                })}
-                                data-prompt-action-scope={
-                                  message.role === "user" ? "true" : undefined
-                                }
-                              >
-                                <div
-                                  className={clsx(
-                                    chatStyles["chat-message-item"],
-                                    {
-                                      [styles.error]:
-                                        message.status === "error",
-                                      [styles["prompt-message-bubble"]]:
-                                        message.role === "user",
-                                    },
-                                  )}
-                                  onClick={
-                                    message.role === "user"
-                                      ? () =>
-                                          setActivePromptActionsId((current) =>
-                                            current === message.id
-                                              ? null
-                                              : message.id,
-                                          )
-                                      : undefined
-                                  }
-                                >
-                                  {displayContent}
-                                </div>
-                                {showPromptActions && (
-                                  <div
-                                    className={clsx(
-                                      styles["image-message-actions"],
-                                      styles["image-message-actions-user"],
-                                    )}
-                                  >
-                                    <ImageChatAction
-                                      text="收藏"
-                                      onClick={() => {
-                                        favoritePrompt(message);
-                                        setActivePromptActionsId(null);
-                                      }}
-                                    />
-                                    <ImageChatAction
-                                      text="从对话移除"
-                                      onClick={() => {
-                                        hideMessage(message.id);
-                                        setActivePromptActionsId(null);
-                                      }}
-                                    />
-                                    <ImageChatAction
-                                      text={Locale.Chat.Actions.Copy}
-                                      onClick={() => {
-                                        copyMessage(message);
-                                        setActivePromptActionsId(null);
-                                      }}
-                                    />
-                                  </div>
-                                )}
+                      return (
+                        <div
+                          key={message.id}
+                          className={clsx(chatStyles["chat-message"], {
+                            [chatStyles["chat-message-user"]]:
+                              message.role === "user",
+                          })}
+                        >
+                          <div className={chatStyles["chat-message-container"]}>
+                            {showActions && message.role !== "user" && (
+                              <div className={styles["image-message-actions"]}>
+                                <ImageChatAction
+                                  text="从对话移除"
+                                  onClick={() => hideMessage(message.id)}
+                                />
                               </div>
                             )}
-                            {message.status === "loading" &&
-                              !displayContent && (
-                                <div className={styles["message-meta"]}>
-                                  {message.content ||
-                                    Locale.ImageChat.Generating}
-                                </div>
-                              )}
-                            {displayImages.length > 0 && (
-                              <div className={styles["image-grid"]}>
-                                {displayImages.map((image, index) => (
-                                  <ImageResult
-                                    key={`${message.id}-${index}`}
-                                    resource={{
-                                      id: `${session.id}-${message.id}-${index}`,
-                                      sessionId: session.id,
-                                      messageId: message.id,
-                                      imageIndex: index,
-                                      image,
-                                      topic: session.topic,
-                                      createdAt: message.createdAt,
-                                    }}
-                                    onOpen={setSelectedImage}
-                                  />
-                                ))}
-                                {Array.from({ length: deletedImages }).map(
-                                  (_, index) => (
-                                    <div
-                                      key={`${message.id}-deleted-${index}`}
-                                      className={styles["deleted-image"]}
-                                    >
-                                      图片已删除
-                                    </div>
-                                  ),
-                                )}
-                              </div>
-                            )}
-                            {displayImages.length === 0 &&
-                              deletedImages > 0 && (
-                                <div className={styles["deleted-image"]}>
-                                  图片已删除
-                                </div>
-                              )}
                             <div
-                              className={clsx(styles["message-footer"], {
-                                [styles["message-footer-with-model"]]:
-                                  message.model && message.status !== "loading",
+                              className={clsx(styles["image-message-content"], {
+                                [styles["image-message-content-media"]]:
+                                  displayImages.length > 0,
                               })}
                             >
-                              {message.model &&
-                                message.status !== "loading" && (
-                                  <span className={styles["message-meta"]}>
-                                    {message.model}
-                                  </span>
+                              {(displayContent ||
+                                message.status === "error") && (
+                                <div
+                                  className={clsx({
+                                    [styles["prompt-action-scope"]]:
+                                      message.role === "user",
+                                  })}
+                                  data-prompt-action-scope={
+                                    message.role === "user" ? "true" : undefined
+                                  }
+                                >
+                                  <div
+                                    className={clsx(
+                                      chatStyles["chat-message-item"],
+                                      {
+                                        [styles.error]:
+                                          message.status === "error",
+                                        [styles["prompt-message-bubble"]]:
+                                          message.role === "user",
+                                      },
+                                    )}
+                                    onClick={
+                                      message.role === "user"
+                                        ? () =>
+                                            setActivePromptActionsId(
+                                              (current) =>
+                                                current === message.id
+                                                  ? null
+                                                  : message.id,
+                                            )
+                                        : undefined
+                                    }
+                                  >
+                                    {displayContent}
+                                  </div>
+                                  {showPromptActions && (
+                                    <div
+                                      className={clsx(
+                                        styles["image-message-actions"],
+                                        styles["image-message-actions-user"],
+                                      )}
+                                    >
+                                      <ImageChatAction
+                                        text="收藏"
+                                        onClick={() => {
+                                          favoritePrompt(message);
+                                          setActivePromptActionsId(null);
+                                        }}
+                                      />
+                                      <ImageChatAction
+                                        text="从对话移除"
+                                        onClick={() => {
+                                          hideMessage(message.id);
+                                          setActivePromptActionsId(null);
+                                        }}
+                                      />
+                                      <ImageChatAction
+                                        text={Locale.Chat.Actions.Copy}
+                                        onClick={() => {
+                                          copyMessage(message);
+                                          setActivePromptActionsId(null);
+                                        }}
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              {message.status === "loading" &&
+                                !displayContent && (
+                                  <div className={styles["message-meta"]}>
+                                    {message.content ||
+                                      Locale.ImageChat.Generating}
+                                  </div>
                                 )}
-                              <span
-                                className={clsx(
-                                  chatStyles["chat-message-action-date"],
-                                  styles["message-date"],
+                              {displayImages.length > 0 && (
+                                <div className={styles["image-grid"]}>
+                                  {displayImages.map((image, index) => (
+                                    <ImageResult
+                                      key={`${message.id}-${index}`}
+                                      resource={{
+                                        id: `${session.id}-${message.id}-${index}`,
+                                        sessionId: session.id,
+                                        messageId: message.id,
+                                        imageIndex: index,
+                                        image,
+                                        topic: session.topic,
+                                        createdAt: message.createdAt,
+                                      }}
+                                      onOpen={setSelectedImage}
+                                    />
+                                  ))}
+                                  {Array.from({ length: deletedImages }).map(
+                                    (_, index) => (
+                                      <div
+                                        key={`${message.id}-deleted-${index}`}
+                                        className={styles["deleted-image"]}
+                                      >
+                                        图片已删除
+                                      </div>
+                                    ),
+                                  )}
+                                </div>
+                              )}
+                              {displayImages.length === 0 &&
+                                deletedImages > 0 && (
+                                  <div className={styles["deleted-image"]}>
+                                    图片已删除
+                                  </div>
                                 )}
+                              <div
+                                className={clsx(styles["message-footer"], {
+                                  [styles["message-footer-with-model"]]:
+                                    message.model &&
+                                    message.status !== "loading",
+                                })}
                               >
-                                {new Date(message.createdAt).toLocaleString()}
-                              </span>
+                                {message.model &&
+                                  message.status !== "loading" && (
+                                    <span className={styles["message-meta"]}>
+                                      {message.model}
+                                    </span>
+                                  )}
+                                <span
+                                  className={clsx(
+                                    chatStyles["chat-message-action-date"],
+                                    styles["message-date"],
+                                  )}
+                                >
+                                  {new Date(message.createdAt).toLocaleString()}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })
+                      );
+                    },
+                  )
                 )}
               </div>
             </div>

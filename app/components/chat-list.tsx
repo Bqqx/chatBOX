@@ -1,5 +1,3 @@
-import DeleteIcon from "../icons/delete.svg";
-
 import styles from "./home.module.scss";
 import {
   DragDropContext,
@@ -23,7 +21,7 @@ import clsx from "clsx";
 
 export function ChatItem(props: {
   onClick?: () => void;
-  onDelete?: () => void;
+  onArchive?: () => void;
   title: string;
   count: number;
   time: string;
@@ -80,26 +78,31 @@ export function ChatItem(props: {
             </div>
           ) : (
             <>
-              <div className={styles["chat-item-title"]}>{props.title}</div>
-              <div className={styles["chat-item-info"]}>
-                <div className={styles["chat-item-count"]}>
-                  {Locale.ChatItem.ChatItemCount(props.count)}
+              <div className={styles["chat-item-main"]}>
+                <div className={styles["chat-item-title"]}>{props.title}</div>
+                <div className={styles["chat-item-info"]}>
+                  <div className={styles["chat-item-count"]}>
+                    {Locale.ChatItem.ChatItemCount(props.count)}
+                  </div>
+                  <div className={styles["chat-item-date"]}>{props.time}</div>
                 </div>
-                <div className={styles["chat-item-date"]}>{props.time}</div>
               </div>
+              <button
+                type="button"
+                className={styles["chat-item-archive"]}
+                onPointerDownCapture={(e) => {
+                  e.stopPropagation();
+                }}
+                onClickCapture={(e) => {
+                  props.onArchive?.();
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+              >
+                归档
+              </button>
             </>
           )}
-
-          <div
-            className={styles["chat-item-delete"]}
-            onClickCapture={(e) => {
-              props.onDelete?.();
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-          >
-            <DeleteIcon />
-          </div>
         </div>
       )}
     </Draggable>
@@ -157,7 +160,7 @@ export function ChatList(props: { narrow?: boolean }) {
                   navigate(Path.Chat);
                   selectSession(i);
                 }}
-                onDelete={async () => {
+                onArchive={async () => {
                   if (
                     (!props.narrow && !isMobileScreen) ||
                     (await showConfirm("确定归档这个对话吗？"))
@@ -231,7 +234,7 @@ export function ImageChatList(props: { narrow?: boolean }) {
                   selectSession(i);
                   navigate(Path.Sd, { state: { showDetail: true } });
                 }}
-                onDelete={async () => {
+                onArchive={async () => {
                   if (
                     (!props.narrow && !isMobileScreen) ||
                     (await showConfirm("确定归档这个对话吗？"))

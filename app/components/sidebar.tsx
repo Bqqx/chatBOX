@@ -449,6 +449,7 @@ export function SideBar(props: {
   const navigate = useNavigate();
   const location = useLocation();
   const config = useAppConfig();
+  const isMobileScreen = useMobileScreen();
   const chatStore = useChatStore();
   const imageChatStore = useImageChatStore();
   const [mcpEnabled, setMcpEnabled] = useState(false);
@@ -516,7 +517,9 @@ export function SideBar(props: {
               [styles["sidebar-bar-button-active"]]: isChatActive,
             })}
             onClick={() => {
-              navigate(Path.Chat, { state: { fromHome: true } });
+              navigate(isMobileScreen ? Path.Home : Path.Chat, {
+                state: { fromHome: true },
+              });
             }}
             shadow
           />
@@ -557,25 +560,6 @@ export function SideBar(props: {
       <SideBarTail
         primaryAction={
           <>
-            {mode !== "resource" && (
-              <div className={clsx(styles["sidebar-action"], styles.mobile)}>
-                <IconButton
-                  icon={<DeleteIcon />}
-                  title="归档当前对话"
-                  onClick={async () => {
-                    if (await showConfirm("确定归档当前对话吗？")) {
-                      if (mode === "image") {
-                        imageChatStore.deleteSession(
-                          imageChatStore.currentSessionIndex,
-                        );
-                      } else {
-                        chatStore.deleteSession(chatStore.currentSessionIndex);
-                      }
-                    }
-                  }}
-                />
-              </div>
-            )}
             <div className={styles["sidebar-action"]}>
               <IconButton
                 aria="归档管理"
