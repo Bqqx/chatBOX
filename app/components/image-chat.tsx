@@ -50,7 +50,7 @@ const IMAGE_ENGINE_OPTIONS = ["Nanobanana", "ChatGPT"] as const;
 type ImageEngine = (typeof IMAGE_ENGINE_OPTIONS)[number];
 
 const NANO_MODEL_ALIASES: Record<string, string> = {
-  "[Rim] gemini-3-pro-image-preview": "��Rim��gemini-3-pro-image-preview",
+  "[Rim] gemini-3-pro-image-preview": "「Rim」gemini-3-pro-image-preview",
 };
 
 function normalizeRelayModelName(engine: ImageEngine, model: string) {
@@ -61,7 +61,7 @@ function normalizeRelayModelName(engine: ImageEngine, model: string) {
 
 function getDefaultImageModel(engine: ImageEngine) {
   return engine === "Nanobanana"
-    ? "��Rim��gemini-3-pro-image-preview"
+    ? "「Rim」gemini-3-pro-image-preview"
     : "gpt-image-2";
 }
 
@@ -211,7 +211,7 @@ function sizeToGeminiImageConfig(size: string) {
 
 function buildGenerateContentPayload(prompt: string, size: string) {
   const imageConfig = sizeToGeminiImageConfig(size);
-  const promptWithParams = `${prompt} [�ֱ���: ${imageConfig.imageSize}, ����: ${imageConfig.aspectRatio}]`;
+  const promptWithParams = `${prompt} [分辨率: ${imageConfig.imageSize}, 比例: ${imageConfig.aspectRatio}]`;
 
   return {
     contents: [
@@ -261,7 +261,7 @@ function buildOpenAIImagePayload(
 
 function buildNanoBananaPayload(prompt: string, size: string) {
   const imageConfig = sizeToGeminiImageConfig(size);
-  const promptWithParams = `${prompt} [�ֱ���: ${imageConfig.imageSize}, ����: ${imageConfig.aspectRatio}]`;
+  const promptWithParams = `${prompt} [分辨率: ${imageConfig.imageSize}, 比例: ${imageConfig.aspectRatio}]`;
 
   return {
     contents: [
@@ -412,14 +412,16 @@ function ModelSelector(props: {
   value: string;
   options: string[];
   placeholder: string;
-  onSelect: (model: string) => void;
-  onAdd: (model: string) => void;
-  onDelete: (model: string) => void;
+  ariaLabel: string;
+  onSelect: (value: string) => void;
+  onAdd?: (value: string) => void;
+  onDelete?: (value: string) => void;
 }) {
   const selectorRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [newModel, setNewModel] = useState("");
   const currentModel = props.value || props.placeholder;
+  const editable = Boolean(props.onAdd && props.onDelete);
 
   useEffect(() => {
     if (!open) return;
@@ -445,7 +447,7 @@ function ModelSelector(props: {
 
   function addModel() {
     const model = newModel.trim();
-    if (!model) return;
+    if (!model || !props.onAdd) return;
     props.onAdd(model);
     setNewModel("");
     setOpen(false);
@@ -455,13 +457,13 @@ function ModelSelector(props: {
     <div className={styles["model-selector"]} ref={selectorRef}>
       <button
         type="button"
-        aria-label="��תģ����"
+        aria-label={props.ariaLabel}
         aria-expanded={open}
         className={styles["model-selector-trigger"]}
         onClick={() => setOpen((value) => !value)}
       >
         <span>{currentModel}</span>
-        <span className={styles["model-selector-arrow"]}>?</span>
+        <span className={styles["model-selector-arrow"]}>v</span>
       </button>
       {open && (
         <div className={styles["model-selector-menu"]}>
@@ -472,6 +474,7 @@ function ModelSelector(props: {
                 className={clsx(styles["model-selector-option"], {
                   [styles["model-selector-option-active"]]:
                     model === currentModel,
+                  [styles["model-selector-option-readonly"]]: !editable,
                 })}
               >
                 <button
@@ -484,46 +487,50 @@ function ModelSelector(props: {
                 >
                   {model}
                 </button>
-                <button
-                  type="button"
-                  aria-label={`ɾ��ģ�� ${model}`}
-                  className={styles["model-selector-delete"]}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    props.onDelete(model);
-                  }}
-                >
-                  ��
-                </button>
+                {editable && (
+                  <button
+                    type="button"
+                    aria-label={`删除模型 ${model}`}
+                    className={styles["model-selector-delete"]}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      props.onDelete?.(model);
+                    }}
+                  >
+                    x
+                  </button>
+                )}
               </div>
             ))}
           </div>
-          <div className={styles["model-selector-add"]}>
-            <input
-              aria-label="����ģ����"
-              value={newModel}
-              placeholder="����ģ����"
-              onChange={(event) => setNewModel(event.currentTarget.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  addModel();
-                }
-                if (event.key === "Escape") {
-                  setOpen(false);
-                }
-              }}
-            />
-            <button
-              type="button"
-              aria-label="����ģ��"
-              title="����ģ��"
-              onClick={addModel}
-              disabled={!newModel.trim()}
-            >
-              +
-            </button>
-          </div>
+          {editable && (
+            <div className={styles["model-selector-add"]}>
+              <input
+                aria-label="新增模型名称"
+                value={newModel}
+                placeholder="新增模型名称"
+                onChange={(event) => setNewModel(event.currentTarget.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    addModel();
+                  }
+                  if (event.key === "Escape") {
+                    setOpen(false);
+                  }
+                }}
+              />
+              <button
+                type="button"
+                aria-label="新增模型"
+                title="新增模型"
+                onClick={addModel}
+                disabled={!newModel.trim()}
+              >
+                +
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -701,7 +708,7 @@ function extractAssistantText(data: any) {
 
 function getErrorMessage(error: unknown) {
   if (error instanceof DOMException && error.name === "AbortError") {
-    return "���ɳ�ʱ�����Ժ����Ի򽵵��������ֱ���";
+    return "生成超时，请稍后重试或降低图片分辨率";
   }
   if (error instanceof Error) return error.message;
   return String(error);
@@ -823,6 +830,7 @@ export function ImageChat() {
     string | null
   >(null);
   const [showFavoritePrompts, setShowFavoritePrompts] = useState(false);
+  const [showImageSettings, setShowImageSettings] = useState(false);
   const favoritePrompts = imageChatStore.favoritePrompts ?? [];
   const showMobileDetail =
     !isMobileScreen || (location.state as { showDetail?: boolean })?.showDetail;
@@ -965,7 +973,7 @@ export function ImageChat() {
   }
 
   function updateSessionTopic() {
-    showPrompt("�༭����", session.topic, 1).then((nextTopic) => {
+    showPrompt("编辑标题", session.topic, 1).then((nextTopic) => {
       const topic = nextTopic.trim();
       if (!topic) return;
       imageChatStore.updateTargetSession(session, (targetSession) => {
@@ -1004,7 +1012,7 @@ export function ImageChat() {
     if (!content) return;
 
     imageChatStore.addFavoritePrompt(content);
-    showToast("���ղ���ʾ��");
+    showToast("已收藏提示词");
   }
 
   function applyFavoritePrompt(content: string) {
@@ -1188,7 +1196,7 @@ export function ImageChat() {
                     <IconButton
                       icon={<ReturnIcon />}
                       bordered
-                      title="����"
+                      title="返回"
                       onClick={() =>
                         navigate(Path.Sd, { state: { showDetail: false } })
                       }
@@ -1246,7 +1254,12 @@ export function ImageChat() {
               </div>
             </div>
 
-            <div className={chatStyles["chat-body"]} ref={scrollRef}>
+            <div
+              className={clsx(chatStyles["chat-body"], {
+                [styles["image-body-settings-open"]]: showImageSettings,
+              })}
+              ref={scrollRef}
+            >
               <div className={styles["image-body"]}>
                 {messages.length === 0 ? (
                   <div className={styles.empty}>{Locale.ImageChat.Empty}</div>
@@ -1285,7 +1298,7 @@ export function ImageChat() {
                           {showActions && message.role !== "user" && (
                             <div className={styles["image-message-actions"]}>
                               <ImageChatAction
-                                text="�ӶԻ����Ƴ�"
+                                text="从对话移除"
                                 onClick={() => hideMessage(message.id)}
                               />
                             </div>
@@ -1337,14 +1350,14 @@ export function ImageChat() {
                                     )}
                                   >
                                     <ImageChatAction
-                                      text="�ղ�"
+                                      text="收藏"
                                       onClick={() => {
                                         favoritePrompt(message);
                                         setActivePromptActionsId(null);
                                       }}
                                     />
                                     <ImageChatAction
-                                      text="�ӶԻ����Ƴ�"
+                                      text="从对话移除"
                                       onClick={() => {
                                         hideMessage(message.id);
                                         setActivePromptActionsId(null);
@@ -1391,7 +1404,7 @@ export function ImageChat() {
                                       key={`${message.id}-deleted-${index}`}
                                       className={styles["deleted-image"]}
                                     >
-                                      ͼƬ��ɾ��
+                                      图片已删除
                                     </div>
                                   ),
                                 )}
@@ -1400,7 +1413,7 @@ export function ImageChat() {
                             {displayImages.length === 0 &&
                               deletedImages > 0 && (
                                 <div className={styles["deleted-image"]}>
-                                  ͼƬ��ɾ��
+                                  图片已删除
                                 </div>
                               )}
                             <div
@@ -1435,44 +1448,84 @@ export function ImageChat() {
 
             <div className={chatStyles["chat-input-panel"]}>
               <div className={styles["image-options"]}>
-                <label className={styles.option}>
-                  <span>��ͼ����</span>
-                  <select
-                    value={engine}
-                    onChange={(e) =>
-                      updateEngine(e.currentTarget.value as ImageEngine)
-                    }
+                <div
+                  className={styles["image-settings"]}
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    className={styles["image-settings-toggle"]}
+                    aria-expanded={showImageSettings}
+                    onPointerDown={(event) => {
+                      event.stopPropagation();
+                    }}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setShowImageSettings((value) => !value);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        setShowImageSettings((value) => !value);
+                      }
+                    }}
                   >
-                    {IMAGE_ENGINE_OPTIONS.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <div className={styles.option}>
-                  <span>��תģ����</span>
-                  <ModelSelector
-                    value={model}
-                    options={modelOptions}
-                    placeholder={getDefaultImageModel(engine)}
-                    onSelect={updateModel}
-                    onAdd={addModelOption}
-                    onDelete={deleteModelOption}
-                  />
+                    <span>生图设置</span>
+                    <span className={styles["image-settings-arrow"]}>
+                      {showImageSettings ? "^" : "v"}
+                    </span>
+                  </button>
+                  {showImageSettings && (
+                    <div className={styles["image-settings-panel"]}>
+                      <div className={styles["image-settings-row"]}>
+                        <label className={styles.option}>
+                          <span>生图类型</span>
+                          <ModelSelector
+                            value={engine}
+                            options={[...IMAGE_ENGINE_OPTIONS]}
+                            placeholder="Nanobanana"
+                            ariaLabel="生图类型"
+                            onSelect={(value) =>
+                              updateEngine(value as ImageEngine)
+                            }
+                          />
+                        </label>
+                        <div className={styles.option}>
+                          <span>收藏提示词</span>
+                          <button
+                            type="button"
+                            className={styles["favorite-prompts-button"]}
+                            onClick={() => setShowFavoritePrompts(true)}
+                          >
+                            收藏提示词
+                          </button>
+                        </div>
+                      </div>
+                      <label className={styles.option}>
+                        <span>生图模型</span>
+                        <ModelSelector
+                          value={model}
+                          options={modelOptions}
+                          placeholder={getDefaultImageModel(engine)}
+                          ariaLabel="生图模型"
+                          onSelect={updateModel}
+                          onAdd={addModelOption}
+                          onDelete={deleteModelOption}
+                        />
+                      </label>
+                    </div>
+                  )}
                 </div>
                 <label className={styles.option}>
                   <span>{Locale.ImageChat.Size}</span>
-                  <select
+                  <ModelSelector
                     value={size}
-                    onChange={(e) => setSize(e.currentTarget.value)}
-                  >
-                    {IMAGE_RATIO_OPTIONS.map((ratio) => (
-                      <option key={ratio} value={ratio}>
-                        {ratio}
-                      </option>
-                    ))}
-                  </select>
+                    options={IMAGE_RATIO_OPTIONS}
+                    placeholder="1:1"
+                    ariaLabel={Locale.ImageChat.Size}
+                    onSelect={setSize}
+                  />
                 </label>
                 <label className={styles.option}>
                   <span>{Locale.ImageChat.Count}</span>
@@ -1491,16 +1544,6 @@ export function ImageChat() {
                     }
                   />
                 </label>
-                <div className={styles.option}>
-                  <span>�ղ���ʾ��</span>
-                  <button
-                    type="button"
-                    className={styles["favorite-prompts-button"]}
-                    onClick={() => setShowFavoritePrompts(true)}
-                  >
-                    �ղ���ʾ��
-                  </button>
-                </div>
               </div>
               <div className={chatStyles["chat-input-panel-inner"]}>
                 <textarea
@@ -1538,13 +1581,13 @@ export function ImageChat() {
               }}
             >
               <Modal
-                title="�ղ���ʾ��"
+                title="收藏提示词"
                 onClose={() => setShowFavoritePrompts(false)}
               >
                 <div className={styles["favorite-prompts-modal"]}>
                   {favoritePrompts.length === 0 ? (
                     <div className={styles["favorite-prompts-empty"]}>
-                      �����ղ���ʾ��
+                      暂无收藏提示词
                     </div>
                   ) : (
                     favoritePrompts.map((item) => (
