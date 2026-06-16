@@ -279,16 +279,55 @@
   border-radius: 10px;
   background: var(--white);
   color: var(--black);
-  padding: 12px;
-  text-align: left;
-  white-space: pre-wrap;
-  word-break: break-word;
-  line-height: 1.6;
-  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px;
+  box-sizing: border-box;
 
   &:hover {
     border-color: var(--primary);
     background: rgba(255, 255, 255, 0.04);
+  }
+}
+
+.favorite-prompt-content,
+.favorite-prompt-delete {
+  border: 0;
+  background: transparent;
+  color: var(--black);
+  cursor: pointer;
+}
+
+.favorite-prompt-content {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
+  height: auto;
+  box-sizing: border-box;
+  padding: 4px;
+  font: inherit;
+  text-align: left;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+
+.favorite-prompt-delete {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 28px;
+  border: var(--border-in-light);
+  border-radius: 8px;
+  background: var(--white);
+  font-size: 12px;
+  opacity: 0.55;
+
+  &:hover {
+    opacity: 1;
+    color: #ff4d4f;
   }
 }
 

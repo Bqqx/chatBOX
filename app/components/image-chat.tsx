@@ -1464,12 +1464,6 @@ export function ImageChat() {
                       event.stopPropagation();
                       setShowImageSettings((value) => !value);
                     }}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        setShowImageSettings((value) => !value);
-                      }
-                    }}
                   >
                     <span>生图设置</span>
                     <span className={styles["image-settings-arrow"]}>
@@ -1582,6 +1576,7 @@ export function ImageChat() {
             >
               <Modal
                 title="收藏提示词"
+                showMaxButton={false}
                 onClose={() => setShowFavoritePrompts(false)}
               >
                 <div className={styles["favorite-prompts-modal"]}>
@@ -1591,14 +1586,28 @@ export function ImageChat() {
                     </div>
                   ) : (
                     favoritePrompts.map((item) => (
-                      <button
+                      <div
                         key={item.id}
-                        type="button"
                         className={styles["favorite-prompt-item"]}
-                        onClick={() => applyFavoritePrompt(item.content)}
                       >
-                        {item.content}
-                      </button>
+                        <button
+                          type="button"
+                          className={styles["favorite-prompt-content"]}
+                          onClick={() => applyFavoritePrompt(item.content)}
+                        >
+                          {item.content}
+                        </button>
+                        <button
+                          type="button"
+                          className={styles["favorite-prompt-delete"]}
+                          aria-label={`删除提示词 ${item.content}`}
+                          onClick={() =>
+                            imageChatStore.deleteFavoritePrompt(item.id)
+                          }
+                        >
+                          删除
+                        </button>
+                      </div>
                     ))
                   )}
                 </div>

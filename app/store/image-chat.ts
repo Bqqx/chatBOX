@@ -202,6 +202,14 @@ export const useImageChatStore = createPersistStore(
         }));
       },
 
+      deleteFavoritePrompt(id: string) {
+        set((state) => ({
+          favoritePrompts: (state.favoritePrompts ?? []).filter(
+            (item) => item.id !== id,
+          ),
+        }));
+      },
+
       currentSession() {
         let index = get().currentSessionIndex;
         const sessions = get().sessions;
