@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import clsx from "clsx";
@@ -22,19 +22,16 @@ import {
 } from "../store";
 import { copyToClipboard, useMobileScreen } from "../utils";
 import { ImagePreviewModal } from "./image-preview";
-import { showPrompt, showToast } from "./ui-lib";
+import { Modal, showPrompt, showToast } from "./ui-lib";
 import { ImageResource } from "../utils/image-resources";
 
 import ReturnIcon from "../icons/return.svg";
 import SendWhiteIcon from "../icons/send-white.svg";
 import RenameIcon from "../icons/rename.svg";
-import ResetIcon from "../icons/reload.svg";
-import HideIcon from "../icons/eye-off.svg";
-import CopyIcon from "../icons/copy.svg";
 import MinIcon from "../icons/min.svg";
 import MaxIcon from "../icons/max.svg";
 
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const IMAGE_RATIO_OPTIONS = [
   "1:1",
@@ -53,7 +50,7 @@ const IMAGE_ENGINE_OPTIONS = ["Nanobanana", "ChatGPT"] as const;
 type ImageEngine = (typeof IMAGE_ENGINE_OPTIONS)[number];
 
 const NANO_MODEL_ALIASES: Record<string, string> = {
-  "[Rim] gemini-3-pro-image-preview": "「Rim」gemini-3-pro-image-preview",
+  "[Rim] gemini-3-pro-image-preview": "��Rim��gemini-3-pro-image-preview",
 };
 
 function normalizeRelayModelName(engine: ImageEngine, model: string) {
@@ -64,7 +61,7 @@ function normalizeRelayModelName(engine: ImageEngine, model: string) {
 
 function getDefaultImageModel(engine: ImageEngine) {
   return engine === "Nanobanana"
-    ? "「Rim」gemini-3-pro-image-preview"
+    ? "��Rim��gemini-3-pro-image-preview"
     : "gpt-image-2";
 }
 
@@ -214,7 +211,7 @@ function sizeToGeminiImageConfig(size: string) {
 
 function buildGenerateContentPayload(prompt: string, size: string) {
   const imageConfig = sizeToGeminiImageConfig(size);
-  const promptWithParams = `${prompt} [分辨率: ${imageConfig.imageSize}, 比例: ${imageConfig.aspectRatio}]`;
+  const promptWithParams = `${prompt} [�ֱ���: ${imageConfig.imageSize}, ����: ${imageConfig.aspectRatio}]`;
 
   return {
     contents: [
@@ -264,7 +261,7 @@ function buildOpenAIImagePayload(
 
 function buildNanoBananaPayload(prompt: string, size: string) {
   const imageConfig = sizeToGeminiImageConfig(size);
-  const promptWithParams = `${prompt} [分辨率: ${imageConfig.imageSize}, 比例: ${imageConfig.aspectRatio}]`;
+  const promptWithParams = `${prompt} [�ֱ���: ${imageConfig.imageSize}, ����: ${imageConfig.aspectRatio}]`;
 
   return {
     contents: [
@@ -398,59 +395,16 @@ function ImageResult(props: {
   );
 }
 
-function ImageChatAction(props: {
-  text: string;
-  icon: JSX.Element;
-  onClick: () => void;
-}) {
-  const iconRef = useRef<HTMLDivElement>(null);
-  const textRef = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState({
-    full: 16,
-    icon: 16,
-  });
-
-  function updateWidth() {
-    if (!iconRef.current || !textRef.current) return;
-    const getWidth = (dom: HTMLDivElement) => dom.getBoundingClientRect().width;
-    const textWidth = getWidth(textRef.current);
-    const iconWidth = getWidth(iconRef.current);
-    setWidth({
-      full: textWidth + iconWidth,
-      icon: iconWidth,
-    });
-  }
-
+function ImageChatAction(props: { text: string; onClick: () => void }) {
   return (
-    <div
-      className={clsx(
-        chatStyles["chat-input-action"],
-        styles["image-chat-action"],
-        "clickable",
-      )}
-      onClick={() => {
-        props.onClick();
-        setTimeout(updateWidth, 1);
-      }}
-      onMouseEnter={updateWidth}
-      onTouchStart={updateWidth}
-      style={
-        {
-          "--icon-width": `${width.icon}px`,
-          "--full-width": `${width.full}px`,
-        } as React.CSSProperties
-      }
+    <button
+      type="button"
+      className={clsx(styles["image-chat-action"], "clickable")}
+      title={props.text}
+      onClick={props.onClick}
     >
-      <div
-        ref={iconRef}
-        className={clsx(chatStyles.icon, styles["image-chat-action-icon"])}
-      >
-        {props.icon}
-      </div>
-      <div className={chatStyles.text} ref={textRef}>
-        {props.text}
-      </div>
-    </div>
+      <div className={styles["image-chat-action-text"]}>{props.text}</div>
+    </button>
   );
 }
 
@@ -501,13 +455,13 @@ function ModelSelector(props: {
     <div className={styles["model-selector"]} ref={selectorRef}>
       <button
         type="button"
-        aria-label="中转模型名"
+        aria-label="��תģ����"
         aria-expanded={open}
         className={styles["model-selector-trigger"]}
         onClick={() => setOpen((value) => !value)}
       >
         <span>{currentModel}</span>
-        <span className={styles["model-selector-arrow"]}>▾</span>
+        <span className={styles["model-selector-arrow"]}>?</span>
       </button>
       {open && (
         <div className={styles["model-selector-menu"]}>
@@ -532,23 +486,23 @@ function ModelSelector(props: {
                 </button>
                 <button
                   type="button"
-                  aria-label={`删除模型 ${model}`}
+                  aria-label={`ɾ��ģ�� ${model}`}
                   className={styles["model-selector-delete"]}
                   onClick={(event) => {
                     event.stopPropagation();
                     props.onDelete(model);
                   }}
                 >
-                  ×
+                  ��
                 </button>
               </div>
             ))}
           </div>
           <div className={styles["model-selector-add"]}>
             <input
-              aria-label="新增模型名"
+              aria-label="����ģ����"
               value={newModel}
-              placeholder="新增模型名"
+              placeholder="����ģ����"
               onChange={(event) => setNewModel(event.currentTarget.value)}
               onKeyDown={(event) => {
                 if (event.key === "Enter") {
@@ -562,8 +516,8 @@ function ModelSelector(props: {
             />
             <button
               type="button"
-              aria-label="新增模型"
-              title="新增模型"
+              aria-label="����ģ��"
+              title="����ģ��"
               onClick={addModel}
               disabled={!newModel.trim()}
             >
@@ -747,7 +701,7 @@ function extractAssistantText(data: any) {
 
 function getErrorMessage(error: unknown) {
   if (error instanceof DOMException && error.name === "AbortError") {
-    return "生成超时，请稍后重试或降低张数、分辨率";
+    return "���ɳ�ʱ�����Ժ����Ի򽵵��������ֱ���";
   }
   if (error instanceof Error) return error.message;
   return String(error);
@@ -834,6 +788,7 @@ function getResponseErrorMessage(json: any, status: number) {
 
 export function ImageChat() {
   const navigate = useNavigate();
+  const location = useLocation();
   const isMobileScreen = useMobileScreen();
   const config = useAppConfig();
   const accessStore = useAccessStore();
@@ -845,6 +800,7 @@ export function ImageChat() {
     [allMessages],
   );
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const savedEngine = IMAGE_ENGINE_OPTIONS.includes(
     accessStore.imageEngine as ImageEngine,
   )
@@ -863,6 +819,34 @@ export function ImageChat() {
   const [selectedImage, setSelectedImage] = useState<
     ImageResource | undefined
   >();
+  const [activePromptActionsId, setActivePromptActionsId] = useState<
+    string | null
+  >(null);
+  const [showFavoritePrompts, setShowFavoritePrompts] = useState(false);
+  const favoritePrompts = imageChatStore.favoritePrompts ?? [];
+  const showMobileDetail =
+    !isMobileScreen || (location.state as { showDetail?: boolean })?.showDetail;
+  const sessionImageResources = useMemo(
+    () =>
+      messages.flatMap((message) => {
+        const displayImages = normalizeImageSources(
+          message.images && message.images.length > 0
+            ? message.images
+            : extractImageUrlsFromText(message.content),
+        );
+
+        return displayImages.map((image, index) => ({
+          id: `${session.id}-${message.id}-${index}`,
+          sessionId: session.id,
+          messageId: message.id,
+          imageIndex: index,
+          image,
+          topic: session.topic,
+          createdAt: message.createdAt,
+        }));
+      }),
+    [messages, session.id, session.topic],
+  );
 
   const canUseImageRelay = useMemo(() => {
     return (
@@ -877,6 +861,27 @@ export function ImageChat() {
       behavior: "smooth",
     });
   }, [messages.length]);
+
+  useEffect(() => {
+    setActivePromptActionsId(null);
+  }, [session.id]);
+
+  useEffect(() => {
+    if (!activePromptActionsId) return;
+
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("[data-prompt-action-scope='true']")) {
+        return;
+      }
+      setActivePromptActionsId(null);
+    };
+
+    window.addEventListener("pointerdown", closeOnOutsideClick);
+    return () => {
+      window.removeEventListener("pointerdown", closeOnOutsideClick);
+    };
+  }, [activePromptActionsId]);
 
   useEffect(() => {
     if (!isCrossEngineModel(engine, model)) return;
@@ -960,23 +965,13 @@ export function ImageChat() {
   }
 
   function updateSessionTopic() {
-    showPrompt("编辑标题", session.topic, 1).then((nextTopic) => {
+    showPrompt("�༭����", session.topic, 1).then((nextTopic) => {
       const topic = nextTopic.trim();
       if (!topic) return;
       imageChatStore.updateTargetSession(session, (targetSession) => {
         targetSession.topic = topic;
         targetSession.lastUpdate = Date.now();
       });
-    });
-  }
-
-  function deleteMessages(messageIds: string[]) {
-    const idSet = new Set(messageIds);
-    imageChatStore.updateTargetSession(session, (targetSession) => {
-      targetSession.messages = targetSession.messages.filter(
-        (message) => !idSet.has(message.id),
-      );
-      targetSession.lastUpdate = Date.now();
     });
   }
 
@@ -1004,40 +999,18 @@ export function ImageChat() {
     }
   }
 
-  function retryMessage(message: (typeof messages)[number]) {
-    if (generating || message.status === "loading") return;
+  function favoritePrompt(message: (typeof messages)[number]) {
+    const content = message.content.trim();
+    if (!content) return;
 
-    const messageIndex = messages.findIndex((item) => item.id === message.id);
-    if (messageIndex < 0) return;
+    imageChatStore.addFavoritePrompt(content);
+    showToast("���ղ���ʾ��");
+  }
 
-    let promptMessage: (typeof messages)[number] | undefined;
-    const removeIds = [message.id];
-
-    if (message.role === "user") {
-      promptMessage = message;
-      const nextAssistant = messages
-        .slice(messageIndex + 1)
-        .find((item) => item.role === "assistant");
-      if (nextAssistant) {
-        removeIds.push(nextAssistant.id);
-      }
-    } else {
-      for (let i = messageIndex - 1; i >= 0; i -= 1) {
-        if (messages[i].role === "user") {
-          promptMessage = messages[i];
-          removeIds.push(messages[i].id);
-          break;
-        }
-      }
-    }
-
-    const retryPrompt = promptMessage?.content.trim();
-    if (!retryPrompt) return;
-
-    if (canUseImageRelay) {
-      deleteMessages(removeIds);
-    }
-    sendPrompt(retryPrompt, false);
+  function applyFavoritePrompt(content: string) {
+    setPrompt(content);
+    setShowFavoritePrompts(false);
+    requestAnimationFrame(() => inputRef.current?.focus());
   }
 
   async function sendPrompt(promptText = prompt, clearInput = true) {
@@ -1202,307 +1175,412 @@ export function ImageChat() {
 
   return (
     <>
-      <SideBar className={homeStyles["sidebar-show"]} mode="image" />
-      <WindowContent>
-        <div className={chatStyles.chat}>
-          <div className="window-header" data-tauri-drag-region>
-            {isMobileScreen && (
-              <div className="window-actions">
-                <div className="window-action-button">
-                  <IconButton
-                    icon={<ReturnIcon />}
-                    bordered
-                    title={Locale.Chat.Actions.ChatList}
-                    onClick={() => navigate(Path.Home)}
-                  />
+      {(!isMobileScreen || !showMobileDetail) && (
+        <SideBar className={homeStyles["sidebar-show"]} mode="image" />
+      )}
+      {showMobileDetail && (
+        <WindowContent>
+          <div className={chatStyles.chat}>
+            <div className="window-header" data-tauri-drag-region>
+              {isMobileScreen && (
+                <div className="window-actions">
+                  <div className="window-action-button">
+                    <IconButton
+                      icon={<ReturnIcon />}
+                      bordered
+                      title="����"
+                      onClick={() =>
+                        navigate(Path.Sd, { state: { showDetail: false } })
+                      }
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
-            <div
-              className={clsx(
-                "window-header-title",
-                chatStyles["chat-body-title"],
               )}
-            >
               <div
                 className={clsx(
-                  "window-header-main-title",
-                  chatStyles["chat-body-main-title"],
+                  "window-header-title",
+                  chatStyles["chat-body-title"],
                 )}
-                onClickCapture={updateSessionTopic}
               >
-                {session.topic || Locale.ImageChat.Title}
+                <div
+                  className={clsx(
+                    "window-header-main-title",
+                    chatStyles["chat-body-main-title"],
+                  )}
+                  onClickCapture={updateSessionTopic}
+                >
+                  {session.topic || Locale.ImageChat.Title}
+                </div>
+                <div className="window-header-sub-title">
+                  {Locale.Chat.SubTitle(messages.length)}
+                </div>
               </div>
-              <div className="window-header-sub-title">
-                {Locale.Chat.SubTitle(messages.length)}
+
+              <div className="window-actions">
+                {!isMobileScreen && (
+                  <div className="window-action-button">
+                    <IconButton
+                      icon={<RenameIcon />}
+                      bordered
+                      title={Locale.Chat.EditMessage.Title}
+                      aria={Locale.Chat.EditMessage.Title}
+                      onClick={updateSessionTopic}
+                    />
+                  </div>
+                )}
+                {!isMobileScreen && (
+                  <div className="window-action-button">
+                    <IconButton
+                      aria={Locale.Chat.Actions.FullScreen}
+                      icon={config.tightBorder ? <MinIcon /> : <MaxIcon />}
+                      bordered
+                      onClick={() => {
+                        config.update(
+                          (config) =>
+                            (config.tightBorder = !config.tightBorder),
+                        );
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="window-actions">
-              {!isMobileScreen && (
-                <div className="window-action-button">
-                  <IconButton
-                    icon={<RenameIcon />}
-                    bordered
-                    title={Locale.Chat.EditMessage.Title}
-                    aria={Locale.Chat.EditMessage.Title}
-                    onClick={updateSessionTopic}
-                  />
-                </div>
-              )}
-              {!isMobileScreen && (
-                <div className="window-action-button">
-                  <IconButton
-                    aria={Locale.Chat.Actions.FullScreen}
-                    icon={config.tightBorder ? <MinIcon /> : <MaxIcon />}
-                    bordered
-                    onClick={() => {
-                      config.update(
-                        (config) => (config.tightBorder = !config.tightBorder),
-                      );
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
+            <div className={chatStyles["chat-body"]} ref={scrollRef}>
+              <div className={styles["image-body"]}>
+                {messages.length === 0 ? (
+                  <div className={styles.empty}>{Locale.ImageChat.Empty}</div>
+                ) : (
+                  messages.map((message) => {
+                    const displayImages = normalizeImageSources(
+                      message.images && message.images.length > 0
+                        ? message.images
+                        : extractImageUrlsFromText(message.content),
+                    );
+                    const displayContent = getDisplayContent(
+                      message.content,
+                      displayImages,
+                    );
+                    const deletedImages = message.deletedImages ?? 0;
+                    const showActions =
+                      message.status !== "loading" &&
+                      (displayContent.length > 0 ||
+                        displayImages.length > 0 ||
+                        deletedImages > 0 ||
+                        message.status === "error");
+                    const showPromptActions =
+                      showActions &&
+                      message.role === "user" &&
+                      activePromptActionsId === message.id;
 
-          <div className={chatStyles["chat-body"]} ref={scrollRef}>
-            <div className={styles["image-body"]}>
-              {messages.length === 0 ? (
-                <div className={styles.empty}>{Locale.ImageChat.Empty}</div>
-              ) : (
-                messages.map((message) => {
-                  const displayImages = normalizeImageSources(
-                    message.images && message.images.length > 0
-                      ? message.images
-                      : extractImageUrlsFromText(message.content),
-                  );
-                  const displayContent = getDisplayContent(
-                    message.content,
-                    displayImages,
-                  );
-                  const deletedImages = message.deletedImages ?? 0;
-                  const showActions =
-                    message.status !== "loading" &&
-                    (displayContent.length > 0 ||
-                      displayImages.length > 0 ||
-                      deletedImages > 0 ||
-                      message.status === "error");
-
-                  return (
-                    <div
-                      key={message.id}
-                      className={clsx(chatStyles["chat-message"], {
-                        [chatStyles["chat-message-user"]]:
-                          message.role === "user",
-                      })}
-                    >
-                      <div className={chatStyles["chat-message-container"]}>
-                        {showActions && (
-                          <div className={chatStyles["chat-message-header"]}>
-                            <div className={chatStyles["chat-message-actions"]}>
-                              <div className={chatStyles["chat-input-actions"]}>
-                                <ImageChatAction
-                                  text={Locale.Chat.Actions.Retry}
-                                  icon={<ResetIcon />}
-                                  onClick={() => retryMessage(message)}
-                                />
-                                <ImageChatAction
-                                  text="隐藏"
-                                  icon={<HideIcon />}
-                                  onClick={() => hideMessage(message.id)}
-                                />
-                                <ImageChatAction
-                                  text={Locale.Chat.Actions.Copy}
-                                  icon={<CopyIcon />}
-                                  onClick={() => copyMessage(message)}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                        <div
-                          className={clsx(styles["image-message-content"], {
-                            [styles["image-message-content-media"]]:
-                              displayImages.length > 0,
-                          })}
-                        >
-                          {(displayContent || message.status === "error") && (
-                            <div
-                              className={clsx(chatStyles["chat-message-item"], {
-                                [styles.error]: message.status === "error",
-                              })}
-                            >
-                              {displayContent}
-                            </div>
-                          )}
-                          {message.status === "loading" && !displayContent && (
-                            <div className={styles["message-meta"]}>
-                              {message.content || Locale.ImageChat.Generating}
-                            </div>
-                          )}
-                          {displayImages.length > 0 && (
-                            <div className={styles["image-grid"]}>
-                              {displayImages.map((image, index) => (
-                                <ImageResult
-                                  key={`${message.id}-${index}`}
-                                  resource={{
-                                    id: `${session.id}-${message.id}-${index}`,
-                                    sessionId: session.id,
-                                    messageId: message.id,
-                                    imageIndex: index,
-                                    image,
-                                    topic: session.topic,
-                                    createdAt: message.createdAt,
-                                  }}
-                                  onOpen={setSelectedImage}
-                                />
-                              ))}
-                              {Array.from({ length: deletedImages }).map(
-                                (_, index) => (
-                                  <div
-                                    key={`${message.id}-deleted-${index}`}
-                                    className={styles["deleted-image"]}
-                                  >
-                                    图片已删除
-                                  </div>
-                                ),
-                              )}
-                            </div>
-                          )}
-                          {displayImages.length === 0 && deletedImages > 0 && (
-                            <div className={styles["deleted-image"]}>
-                              图片已删除
+                    return (
+                      <div
+                        key={message.id}
+                        className={clsx(chatStyles["chat-message"], {
+                          [chatStyles["chat-message-user"]]:
+                            message.role === "user",
+                        })}
+                      >
+                        <div className={chatStyles["chat-message-container"]}>
+                          {showActions && message.role !== "user" && (
+                            <div className={styles["image-message-actions"]}>
+                              <ImageChatAction
+                                text="�ӶԻ����Ƴ�"
+                                onClick={() => hideMessage(message.id)}
+                              />
                             </div>
                           )}
                           <div
-                            className={clsx(styles["message-footer"], {
-                              [styles["message-footer-with-model"]]:
-                                message.model && message.status !== "loading",
+                            className={clsx(styles["image-message-content"], {
+                              [styles["image-message-content-media"]]:
+                                displayImages.length > 0,
                             })}
                           >
-                            {message.model && message.status !== "loading" && (
-                              <span className={styles["message-meta"]}>
-                                {message.model}
-                              </span>
+                            {(displayContent || message.status === "error") && (
+                              <div
+                                className={clsx({
+                                  [styles["prompt-action-scope"]]:
+                                    message.role === "user",
+                                })}
+                                data-prompt-action-scope={
+                                  message.role === "user" ? "true" : undefined
+                                }
+                              >
+                                <div
+                                  className={clsx(
+                                    chatStyles["chat-message-item"],
+                                    {
+                                      [styles.error]:
+                                        message.status === "error",
+                                      [styles["prompt-message-bubble"]]:
+                                        message.role === "user",
+                                    },
+                                  )}
+                                  onClick={
+                                    message.role === "user"
+                                      ? () =>
+                                          setActivePromptActionsId((current) =>
+                                            current === message.id
+                                              ? null
+                                              : message.id,
+                                          )
+                                      : undefined
+                                  }
+                                >
+                                  {displayContent}
+                                </div>
+                                {showPromptActions && (
+                                  <div
+                                    className={clsx(
+                                      styles["image-message-actions"],
+                                      styles["image-message-actions-user"],
+                                    )}
+                                  >
+                                    <ImageChatAction
+                                      text="�ղ�"
+                                      onClick={() => {
+                                        favoritePrompt(message);
+                                        setActivePromptActionsId(null);
+                                      }}
+                                    />
+                                    <ImageChatAction
+                                      text="�ӶԻ����Ƴ�"
+                                      onClick={() => {
+                                        hideMessage(message.id);
+                                        setActivePromptActionsId(null);
+                                      }}
+                                    />
+                                    <ImageChatAction
+                                      text={Locale.Chat.Actions.Copy}
+                                      onClick={() => {
+                                        copyMessage(message);
+                                        setActivePromptActionsId(null);
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                              </div>
                             )}
-                            <span
-                              className={clsx(
-                                chatStyles["chat-message-action-date"],
-                                styles["message-date"],
+                            {message.status === "loading" &&
+                              !displayContent && (
+                                <div className={styles["message-meta"]}>
+                                  {message.content ||
+                                    Locale.ImageChat.Generating}
+                                </div>
                               )}
+                            {displayImages.length > 0 && (
+                              <div className={styles["image-grid"]}>
+                                {displayImages.map((image, index) => (
+                                  <ImageResult
+                                    key={`${message.id}-${index}`}
+                                    resource={{
+                                      id: `${session.id}-${message.id}-${index}`,
+                                      sessionId: session.id,
+                                      messageId: message.id,
+                                      imageIndex: index,
+                                      image,
+                                      topic: session.topic,
+                                      createdAt: message.createdAt,
+                                    }}
+                                    onOpen={setSelectedImage}
+                                  />
+                                ))}
+                                {Array.from({ length: deletedImages }).map(
+                                  (_, index) => (
+                                    <div
+                                      key={`${message.id}-deleted-${index}`}
+                                      className={styles["deleted-image"]}
+                                    >
+                                      ͼƬ��ɾ��
+                                    </div>
+                                  ),
+                                )}
+                              </div>
+                            )}
+                            {displayImages.length === 0 &&
+                              deletedImages > 0 && (
+                                <div className={styles["deleted-image"]}>
+                                  ͼƬ��ɾ��
+                                </div>
+                              )}
+                            <div
+                              className={clsx(styles["message-footer"], {
+                                [styles["message-footer-with-model"]]:
+                                  message.model && message.status !== "loading",
+                              })}
                             >
-                              {new Date(message.createdAt).toLocaleString()}
-                            </span>
+                              {message.model &&
+                                message.status !== "loading" && (
+                                  <span className={styles["message-meta"]}>
+                                    {message.model}
+                                  </span>
+                                )}
+                              <span
+                                className={clsx(
+                                  chatStyles["chat-message-action-date"],
+                                  styles["message-date"],
+                                )}
+                              >
+                                {new Date(message.createdAt).toLocaleString()}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })
-              )}
+                    );
+                  })
+                )}
+              </div>
             </div>
-          </div>
 
-          <div className={chatStyles["chat-input-panel"]}>
-            <div className={styles["image-options"]}>
-              <label className={styles.option}>
-                <span>生图类型</span>
-                <select
-                  value={engine}
-                  onChange={(e) =>
-                    updateEngine(e.currentTarget.value as ImageEngine)
-                  }
-                >
-                  {IMAGE_ENGINE_OPTIONS.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <div className={styles.option}>
-                <span>中转模型名</span>
-                <ModelSelector
-                  value={model}
-                  options={modelOptions}
-                  placeholder={getDefaultImageModel(engine)}
-                  onSelect={updateModel}
-                  onAdd={addModelOption}
-                  onDelete={deleteModelOption}
+            <div className={chatStyles["chat-input-panel"]}>
+              <div className={styles["image-options"]}>
+                <label className={styles.option}>
+                  <span>��ͼ����</span>
+                  <select
+                    value={engine}
+                    onChange={(e) =>
+                      updateEngine(e.currentTarget.value as ImageEngine)
+                    }
+                  >
+                    {IMAGE_ENGINE_OPTIONS.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <div className={styles.option}>
+                  <span>��תģ����</span>
+                  <ModelSelector
+                    value={model}
+                    options={modelOptions}
+                    placeholder={getDefaultImageModel(engine)}
+                    onSelect={updateModel}
+                    onAdd={addModelOption}
+                    onDelete={deleteModelOption}
+                  />
+                </div>
+                <label className={styles.option}>
+                  <span>{Locale.ImageChat.Size}</span>
+                  <select
+                    value={size}
+                    onChange={(e) => setSize(e.currentTarget.value)}
+                  >
+                    {IMAGE_RATIO_OPTIONS.map((ratio) => (
+                      <option key={ratio} value={ratio}>
+                        {ratio}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className={styles.option}>
+                  <span>{Locale.ImageChat.Count}</span>
+                  <input
+                    className={styles["image-count-input"]}
+                    type="number"
+                    min={1}
+                    max={4}
+                    value={count}
+                    onChange={(e) =>
+                      setCount(
+                        clampImageCount(
+                          Number.parseInt(e.currentTarget.value) || 1,
+                        ),
+                      )
+                    }
+                  />
+                </label>
+                <div className={styles.option}>
+                  <span>�ղ���ʾ��</span>
+                  <button
+                    type="button"
+                    className={styles["favorite-prompts-button"]}
+                    onClick={() => setShowFavoritePrompts(true)}
+                  >
+                    �ղ���ʾ��
+                  </button>
+                </div>
+              </div>
+              <div className={chatStyles["chat-input-panel-inner"]}>
+                <textarea
+                  ref={inputRef}
+                  className={chatStyles["chat-input"]}
+                  placeholder={Locale.ImageChat.Prompt}
+                  value={prompt}
+                  rows={3}
+                  onChange={(e) => setPrompt(e.currentTarget.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      sendPrompt();
+                    }
+                  }}
+                />
+                <IconButton
+                  icon={<SendWhiteIcon />}
+                  text={Locale.ImageChat.Send}
+                  type="primary"
+                  disabled={generating || prompt.trim().length === 0}
+                  className={chatStyles["chat-input-send"]}
+                  onClick={() => sendPrompt()}
                 />
               </div>
-              <label className={styles.option}>
-                <span>{Locale.ImageChat.Size}</span>
-                <select
-                  value={size}
-                  onChange={(e) => setSize(e.currentTarget.value)}
-                >
-                  {IMAGE_RATIO_OPTIONS.map((ratio) => (
-                    <option key={ratio} value={ratio}>
-                      {ratio}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className={styles.option}>
-                <span>{Locale.ImageChat.Count}</span>
-                <input
-                  type="number"
-                  min={1}
-                  max={4}
-                  value={count}
-                  onChange={(e) =>
-                    setCount(
-                      clampImageCount(
-                        Number.parseInt(e.currentTarget.value) || 1,
-                      ),
-                    )
-                  }
-                />
-              </label>
-            </div>
-            <div className={chatStyles["chat-input-panel-inner"]}>
-              <textarea
-                className={chatStyles["chat-input"]}
-                placeholder={Locale.ImageChat.Prompt}
-                value={prompt}
-                rows={3}
-                onChange={(e) => setPrompt(e.currentTarget.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    sendPrompt();
-                  }
-                }}
-              />
-              <IconButton
-                icon={<SendWhiteIcon />}
-                text={Locale.ImageChat.Send}
-                type="primary"
-                disabled={generating || prompt.trim().length === 0}
-                className={chatStyles["chat-input-send"]}
-                onClick={() => sendPrompt()}
-              />
             </div>
           </div>
-        </div>
-        {selectedImage && (
-          <ImagePreviewModal
-            resource={selectedImage}
-            onClose={() => setSelectedImage(undefined)}
-            onDelete={(resource) => {
-              imageChatStore.deleteImage(
-                resource.sessionId,
-                resource.messageId,
-                resource.image,
-              );
-              setSelectedImage(undefined);
-            }}
-          />
-        )}
-      </WindowContent>
+          {showFavoritePrompts && (
+            <div
+              className="modal-mask"
+              onClick={(event) => {
+                if (event.target === event.currentTarget) {
+                  setShowFavoritePrompts(false);
+                }
+              }}
+            >
+              <Modal
+                title="�ղ���ʾ��"
+                onClose={() => setShowFavoritePrompts(false)}
+              >
+                <div className={styles["favorite-prompts-modal"]}>
+                  {favoritePrompts.length === 0 ? (
+                    <div className={styles["favorite-prompts-empty"]}>
+                      �����ղ���ʾ��
+                    </div>
+                  ) : (
+                    favoritePrompts.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className={styles["favorite-prompt-item"]}
+                        onClick={() => applyFavoritePrompt(item.content)}
+                      >
+                        {item.content}
+                      </button>
+                    ))
+                  )}
+                </div>
+              </Modal>
+            </div>
+          )}
+          {selectedImage && (
+            <ImagePreviewModal
+              resource={selectedImage}
+              resources={sessionImageResources}
+              currentResourceId={selectedImage.id}
+              onSelect={setSelectedImage}
+              onClose={() => setSelectedImage(undefined)}
+              onDelete={(resource) => {
+                imageChatStore.deleteImage(
+                  resource.sessionId,
+                  resource.messageId,
+                  resource.image,
+                );
+                setSelectedImage(undefined);
+              }}
+            />
+          )}
+        </WindowContent>
+      )}
     </>
   );
 }

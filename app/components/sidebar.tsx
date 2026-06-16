@@ -610,7 +610,7 @@ export function SideBar(props: {
               onClick={() => {
                 if (mode === "image") {
                   imageChatStore.newSession();
-                  navigate(Path.Sd);
+                  navigate(Path.Sd, { state: { showDetail: true } });
                 } else if (config.dontShowMaskSplashScreen) {
                   chatStore.newSession();
                   navigate(Path.Chat);

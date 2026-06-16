@@ -24,6 +24,12 @@ export interface ImageChatSession {
   lastUpdate: number;
 }
 
+export interface FavoriteImagePrompt {
+  id: string;
+  content: string;
+  createdAt: number;
+}
+
 export function createImageMessage(
   override: Partial<ImageChatMessage>,
 ): ImageChatMessage {
@@ -53,6 +59,7 @@ function trimImageTopic(prompt: string) {
 const DEFAULT_IMAGE_CHAT_STATE = {
   sessions: [createEmptyImageSession()],
   archivedSessions: [] as ImageChatSession[],
+  favoritePrompts: [] as FavoriteImagePrompt[],
   currentSessionIndex: 0,
 };
 
@@ -173,6 +180,25 @@ export const useImageChatStore = createPersistStore(
           archivedSessions: (state.archivedSessions ?? []).filter(
             (item) => item.id !== sessionId,
           ),
+        }));
+      },
+
+      addFavoritePrompt(content: string) {
+        const prompt = content.trim();
+        if (!prompt) return;
+
+        const favoritePrompts = get().favoritePrompts ?? [];
+        if (favoritePrompts.some((item) => item.content === prompt)) return;
+
+        set(() => ({
+          favoritePrompts: [
+            {
+              id: nanoid(),
+              content: prompt,
+              createdAt: Date.now(),
+            },
+            ...favoritePrompts,
+          ],
         }));
       },
 

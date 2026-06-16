@@ -228,8 +228,8 @@ export function ImageChatList(props: { narrow?: boolean }) {
                 index={i}
                 selected={i === selectedIndex}
                 onClick={() => {
-                  navigate(Path.Sd);
                   selectSession(i);
+                  navigate(Path.Sd, { state: { showDetail: true } });
                 }}
                 onDelete={async () => {
                   if (

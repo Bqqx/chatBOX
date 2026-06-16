@@ -11,6 +11,7 @@ import clsx from "clsx";
 
 import styles from "./resource-manager.module.scss";
 
+import { IconButton } from "./button";
 import { downloadImage, ImagePreviewModal } from "./image-preview";
 import { useImageChatStore } from "../store";
 import {
@@ -19,10 +20,15 @@ import {
   ImageResource,
   ImageResourceTimeFilter,
 } from "../utils/image-resources";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Path } from "../constant";
+import { useMobileScreen } from "../utils";
+import ReturnIcon from "../icons/return.svg";
 
 export function ResourceManager() {
   const imageChatStore = useImageChatStore();
+  const navigate = useNavigate();
+  const isMobileScreen = useMobileScreen();
   const [searchParams] = useSearchParams();
   const [selected, setSelected] = useState<ImageResource | undefined>();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -120,42 +126,23 @@ export function ResourceManager() {
   return (
     <div className={styles.resources}>
       <div className="window-header" data-tauri-drag-region>
+        {isMobileScreen && (
+          <div className="window-actions">
+            <div className="window-action-button">
+              <IconButton
+                icon={<ReturnIcon />}
+                bordered
+                title="返回"
+                onClick={() => navigate(Path.Home)}
+              />
+            </div>
+          </div>
+        )}
         <div className="window-header-title">
           <div className="window-header-main-title">资源管理</div>
           <div className="window-header-sub-title">
             共 {resources.length} 张图片
           </div>
-        </div>
-        <div className={styles.toolbar}>
-          <button
-            type="button"
-            className={clsx(styles.toolbarButton, {
-              [styles.toolbarButtonActive]: allSelected,
-            })}
-            onClick={toggleSelectAll}
-            disabled={resources.length === 0}
-          >
-            <span className={styles.checkbox}>{allSelected ? "\u2713" : ""}</span>
-            全选
-          </button>
-          {hasSelection && (
-            <>
-              <button
-                type="button"
-                className={styles.toolbarButton}
-                onClick={downloadSelectedResources}
-              >
-                下载 ({selectedCount})
-              </button>
-              <button
-                type="button"
-                className={clsx(styles.toolbarButton, styles.dangerButton)}
-                onClick={deleteSelectedResources}
-              >
-                删除 ({selectedCount})
-              </button>
-            </>
-          )}
         </div>
       </div>
 
@@ -164,7 +151,45 @@ export function ResourceManager() {
           <div className={styles.empty}>暂无图片</div>
         ) : (
           <>
-            <div className={styles.sectionTitle}>媒体内容</div>
+            <div className={styles.sectionHeader}>
+              <div className={styles.sectionTitle}>媒体内容</div>
+              <div className={styles.toolbar}>
+                <button
+                  type="button"
+                  className={clsx(styles.toolbarButton, {
+                    [styles.toolbarButtonActive]: allSelected,
+                  })}
+                  onClick={toggleSelectAll}
+                  disabled={resources.length === 0}
+                >
+                  <span className={styles.checkbox}>
+                    {allSelected ? "\u2713" : ""}
+                  </span>
+                  全选
+                </button>
+                {hasSelection && (
+                  <>
+                    <button
+                      type="button"
+                      className={styles.toolbarButton}
+                      onClick={downloadSelectedResources}
+                    >
+                      下载 ({selectedCount})
+                    </button>
+                    <button
+                      type="button"
+                      className={clsx(
+                        styles.toolbarButton,
+                        styles.dangerButton,
+                      )}
+                      onClick={deleteSelectedResources}
+                    >
+                      删除 ({selectedCount})
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
             <div className={styles.grid}>
               {resources.map((resource) => (
                 <div
@@ -202,6 +227,9 @@ export function ResourceManager() {
       {selected && (
         <ImagePreviewModal
           resource={selected}
+          resources={resources}
+          currentResourceId={selected.id}
+          onSelect={setSelected}
           onClose={() => setSelected(undefined)}
           onDelete={deleteSelectedImage}
         />
