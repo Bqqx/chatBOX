@@ -247,12 +247,44 @@
   }
 }
 
-.image-count-input {
-  width: 100% !important;
-  max-width: none !important;
-  min-width: 0;
-  color: var(--black) !important;
-  text-align: center;
+.image-count-stepper {
+  width: 100%;
+  min-height: 36px;
+  box-sizing: border-box;
+  border: var(--border-in-light);
+  border-radius: 10px;
+  background: var(--white);
+  color: var(--black);
+  display: grid;
+  grid-template-columns: 42px 1fr 42px;
+  align-items: center;
+  overflow: hidden;
+
+  button {
+    width: 42px;
+    height: 36px;
+    border: 0;
+    background: transparent;
+    color: var(--black);
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    touch-action: manipulation;
+
+    &:disabled {
+      opacity: 0.32;
+      cursor: not-allowed;
+    }
+  }
+
+  span {
+    color: var(--black);
+    opacity: 1;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 36px;
+  }
 }
 
 .favorite-prompts-button {

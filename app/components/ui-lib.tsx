@@ -82,7 +82,9 @@ export function ListItem(props: {
           )}
         </div>
       </div>
-      {props.children}
+      {props.children && (
+        <div className={styles["list-control"]}>{props.children}</div>
+      )}
     </div>
   );
 }

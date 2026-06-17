@@ -10,6 +10,8 @@
     "start": "next start",
     "lint": "next lint",
     "export": "yarn mask && cross-env BUILD_MODE=export BUILD_APP=1 next build",
+    "mobile:export": "cross-env BUILD_MODE=export BUILD_APP=1 MOBILE_STATIC=1 next build",
+    "mobile:sync": "yarn mobile:export && cap sync android",
     "export:dev": "concurrently -r \"yarn mask:watch\"  \"cross-env BUILD_MODE=export BUILD_APP=1 next dev\"",
     "app:dev": "concurrently -r \"yarn mask:watch\" \"yarn tauri dev\"",
     "app:build": "yarn mask && yarn tauri build",
@@ -21,6 +23,9 @@
     "test:ci": "node --no-warnings --experimental-vm-modules $(yarn bin jest) --ci"
   },
   "dependencies": {
+    "@capacitor/android": "^8.4.0",
+    "@capacitor/cli": "^8.4.0",
+    "@capacitor/core": "^8.4.0",
     "@fortaine/fetch-event-source": "^3.0.6",
     "@hello-pangea/dnd": "^16.5.0",
     "@modelcontextprotocol/sdk": "^1.0.4",

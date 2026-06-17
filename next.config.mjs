@@ -1,10 +1,18 @@
 import webpack from "webpack";
+import { fileURLToPath } from "url";
 
 const mode = process.env.BUILD_MODE ?? "standalone";
 console.log("[Next] build mode", mode);
 
 const disableChunk = !!process.env.DISABLE_CHUNK || mode === "export";
 console.log("[Next] build with chunk: ", !disableChunk);
+
+const isMobileStatic = process.env.MOBILE_STATIC === "1";
+console.log("[Next] mobile static build: ", isMobileStatic);
+
+const mcpStaticActionsPath = fileURLToPath(
+  new URL("./app/mcp/actions-static.ts", import.meta.url),
+);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -13,6 +21,14 @@ const nextConfig = {
       test: /\.svg$/,
       use: ["@svgr/webpack"],
     });
+
+    if (isMobileStatic) {
+      config.resolve.alias = {
+        ...(config.resolve.alias ?? {}),
+        "../mcp/actions": mcpStaticActionsPath,
+        "@/app/mcp/actions": mcpStaticActionsPath,
+      };
+    }
 
     if (disableChunk) {
       config.plugins.push(

@@ -729,6 +729,35 @@ function clampImageCount(value: number) {
   return Math.min(Math.max(Math.floor(value), 1), 4);
 }
 
+function ImageCountStepper(props: {
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  const value = clampImageCount(props.value);
+
+  return (
+    <div className={styles["image-count-stepper"]}>
+      <button
+        type="button"
+        aria-label="Decrease image count"
+        onClick={() => props.onChange(clampImageCount(value - 1))}
+        disabled={value <= 1}
+      >
+        -
+      </button>
+      <span>{value}</span>
+      <button
+        type="button"
+        aria-label="Increase image count"
+        onClick={() => props.onChange(clampImageCount(value + 1))}
+        disabled={value >= 4}
+      >
+        +
+      </button>
+    </div>
+  );
+}
+
 const RETRYABLE_STATUS = new Set([408, 409, 425, 429, 500, 502, 503, 504]);
 const IMAGE_REQUEST_TIMEOUT_MS = 300000;
 
@@ -1251,17 +1280,15 @@ export function ImageChat() {
               </div>
 
               <div className="window-actions">
-                {!isMobileScreen && (
-                  <div className="window-action-button">
-                    <IconButton
-                      icon={<RenameIcon />}
-                      bordered
-                      title={Locale.Chat.EditMessage.Title}
-                      aria={Locale.Chat.EditMessage.Title}
-                      onClick={updateSessionTopic}
-                    />
-                  </div>
-                )}
+                <div className="window-action-button">
+                  <IconButton
+                    icon={<RenameIcon />}
+                    bordered
+                    title={Locale.Chat.EditMessage.Title}
+                    aria={Locale.Chat.EditMessage.Title}
+                    onClick={updateSessionTopic}
+                  />
+                </div>
                 {!isMobileScreen && (
                   <div className="window-action-button">
                     <IconButton
@@ -1549,20 +1576,7 @@ export function ImageChat() {
                 </label>
                 <label className={styles.option}>
                   <span>{Locale.ImageChat.Count}</span>
-                  <input
-                    className={styles["image-count-input"]}
-                    type="number"
-                    min={1}
-                    max={4}
-                    value={count}
-                    onChange={(e) =>
-                      setCount(
-                        clampImageCount(
-                          Number.parseInt(e.currentTarget.value) || 1,
-                        ),
-                      )
-                    }
-                  />
+                  <ImageCountStepper value={count} onChange={setCount} />
                 </label>
               </div>
               <div className={chatStyles["chat-input-panel-inner"]}>
