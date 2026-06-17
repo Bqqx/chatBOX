@@ -101,6 +101,9 @@
   width: $width;
   background-color: rgba($color: #000000, $alpha: 0);
   cursor: ew-resize;
+  touch-action: none;
+  user-select: none;
+  z-index: 5;
   transition: all ease 0.3s;
   display: flex;
   align-items: center;
@@ -108,6 +111,19 @@
   svg {
     opacity: 0;
     margin-left: -2px;
+  }
+}
+
+@media (pointer: coarse) and (min-width: 601px) {
+  .sidebar-drag {
+    right: -10px;
+    width: 34px;
+    justify-content: center;
+
+    svg {
+      opacity: 0.18;
+      margin-left: 0;
+    }
   }
 }
 

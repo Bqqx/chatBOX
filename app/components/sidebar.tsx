@@ -6,10 +6,10 @@ import { IconButton } from "./button";
 import SettingsIcon from "../icons/settings.svg";
 import HistoryIcon from "../icons/history.svg";
 import ReturnIcon from "../icons/return.svg";
-import ChatGptIcon from "../icons/chatgpt.svg";
+import ChatBoxLogoIcon from "../icons/chatbox-logo.svg";
 import AddIcon from "../icons/add.svg";
 import DeleteIcon from "../icons/delete.svg";
-import MaskIcon from "../icons/mask.svg";
+import FileManagerIcon from "../icons/file-manager.svg";
 import McpIcon from "../icons/mcp.svg";
 import DragIcon from "../icons/drag.svg";
 import ImageIcon from "../icons/image.svg";
@@ -283,7 +283,9 @@ export function useDragSideBar() {
   const config = useAppConfig();
   const startX = useRef(0);
   const startDragWidth = useRef(config.sidebarWidth ?? DEFAULT_SIDEBAR_WIDTH);
-  const lastUpdateTime = useRef(Date.now());
+  const latestClientX = useRef(0);
+  const dragFrame = useRef<number>();
+  const hasDragged = useRef(false);
 
   const toggleSideBar = () => {
     config.update((config) => {
@@ -295,18 +297,23 @@ export function useDragSideBar() {
     });
   };
 
-  const onDragStart = (e: MouseEvent) => {
-    // Remembers the initial width each time the mouse is pressed
+  const onDragStart = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+
     startX.current = e.clientX;
+    latestClientX.current = e.clientX;
     startDragWidth.current = config.sidebarWidth;
+    hasDragged.current = false;
     const dragStartTime = Date.now();
 
-    const handleDragMove = (e: MouseEvent) => {
-      if (Date.now() < lastUpdateTime.current + 20) {
-        return;
+    const applyDragWidth = () => {
+      dragFrame.current = undefined;
+      const d = latestClientX.current - startX.current;
+      if (Math.abs(d) > 4) {
+        hasDragged.current = true;
       }
-      lastUpdateTime.current = Date.now();
-      const d = e.clientX - startX.current;
       const nextWidth = limit(startDragWidth.current + d);
       config.update((config) => {
         if (nextWidth < MIN_SIDEBAR_WIDTH) {
@@ -317,20 +324,35 @@ export function useDragSideBar() {
       });
     };
 
+    const handleDragMove = (event: PointerEvent) => {
+      event.preventDefault();
+      latestClientX.current = event.clientX;
+      if (dragFrame.current === undefined) {
+        dragFrame.current = window.requestAnimationFrame(applyDragWidth);
+      }
+    };
+
     const handleDragEnd = () => {
-      // In useRef the data is non-responsive, so `config.sidebarWidth` can't get the dynamic sidebarWidth
       window.removeEventListener("pointermove", handleDragMove);
       window.removeEventListener("pointerup", handleDragEnd);
+      window.removeEventListener("pointercancel", handleDragEnd);
 
-      // if user click the drag icon, should toggle the sidebar
-      const shouldFireClick = Date.now() - dragStartTime < 300;
+      if (dragFrame.current !== undefined) {
+        window.cancelAnimationFrame(dragFrame.current);
+        dragFrame.current = undefined;
+        applyDragWidth();
+      }
+
+      const shouldFireClick =
+        !hasDragged.current && Date.now() - dragStartTime < 300;
       if (shouldFireClick) {
         toggleSideBar();
       }
     };
 
-    window.addEventListener("pointermove", handleDragMove);
+    window.addEventListener("pointermove", handleDragMove, { passive: false });
     window.addEventListener("pointerup", handleDragEnd);
+    window.addEventListener("pointercancel", handleDragEnd);
   };
 
   const isMobileScreen = useMobileScreen();
@@ -353,7 +375,7 @@ export function useDragSideBar() {
 
 export function SideBarContainer(props: {
   children: React.ReactNode;
-  onDragStart: (e: MouseEvent) => void;
+  onDragStart: (e: React.PointerEvent<HTMLDivElement>) => void;
   shouldNarrow: boolean;
   className?: string;
 }) {
@@ -482,14 +504,14 @@ export function SideBar(props: {
         <ArchiveManagerModal onClose={() => setShowArchiveManager(false)} />
       )}
       <SideBarHeader
-        title="NextChat"
-        subTitle="Build your own AI assistant."
-        logo={<ChatGptIcon />}
+        title="ChatBox"
+        subTitle="把灵感、对话与图像装进一个智能工作舱。"
+        logo={<ChatBoxLogoIcon />}
         shouldNarrow={shouldNarrow}
       >
         <div className={styles["sidebar-header-bar"]}>
           <IconButton
-            icon={<MaskIcon />}
+            icon={<FileManagerIcon />}
             text={shouldNarrow ? undefined : "资源管理"}
             className={clsx(styles["sidebar-bar-button"], {
               [styles["sidebar-bar-button-active"]]: isResourcesActive,

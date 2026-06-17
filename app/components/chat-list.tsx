@@ -121,6 +121,9 @@ export function ChatList(props: { narrow?: boolean }) {
   const chatStore = useChatStore();
   const navigate = useNavigate();
   const isMobileScreen = useMobileScreen();
+  const visibleSessions = sessions
+    .map((session, originalIndex) => ({ session, originalIndex }))
+    .filter(({ session }) => session.messages.length > 0);
 
   const onDragEnd: OnDragEndResponder = (result) => {
     const { destination, source } = result;
@@ -135,7 +138,11 @@ export function ChatList(props: { narrow?: boolean }) {
       return;
     }
 
-    moveSession(source.index, destination.index);
+    const from = visibleSessions[source.index]?.originalIndex;
+    const to = visibleSessions[destination.index]?.originalIndex;
+    if (from === undefined || to === undefined) return;
+
+    moveSession(from, to);
   };
 
   return (
@@ -147,32 +154,34 @@ export function ChatList(props: { narrow?: boolean }) {
             ref={provided.innerRef}
             {...provided.droppableProps}
           >
-            {sessions.map((item, i) => (
-              <ChatItem
-                title={item.topic}
-                time={new Date(item.lastUpdate).toLocaleString()}
-                count={item.messages.length}
-                key={item.id}
-                id={item.id}
-                index={i}
-                selected={i === selectedIndex}
-                onClick={() => {
-                  navigate(Path.Chat);
-                  selectSession(i);
-                }}
-                onArchive={async () => {
-                  if (
-                    (!props.narrow && !isMobileScreen) ||
-                    (await showConfirm("确定归档这个对话吗？"))
-                  ) {
-                    chatStore.deleteSession(i);
-                  }
-                }}
-                narrow={props.narrow}
-                mask={item.mask}
-                activePaths={[Path.Chat, Path.Home]}
-              />
-            ))}
+            {visibleSessions.map(
+              ({ session: item, originalIndex: i }, index) => (
+                <ChatItem
+                  title={item.topic}
+                  time={new Date(item.lastUpdate).toLocaleString()}
+                  count={item.messages.length}
+                  key={item.id}
+                  id={item.id}
+                  index={index}
+                  selected={i === selectedIndex}
+                  onClick={() => {
+                    navigate(Path.Chat);
+                    selectSession(i);
+                  }}
+                  onArchive={async () => {
+                    if (
+                      (!props.narrow && !isMobileScreen) ||
+                      (await showConfirm("确定归档这个对话吗？"))
+                    ) {
+                      chatStore.deleteSession(i);
+                    }
+                  }}
+                  narrow={props.narrow}
+                  mask={item.mask}
+                  activePaths={[Path.Chat, Path.Home]}
+                />
+              ),
+            )}
             {provided.placeholder}
           </div>
         )}
@@ -193,6 +202,12 @@ export function ImageChatList(props: { narrow?: boolean }) {
   const navigate = useNavigate();
   const isMobileScreen = useMobileScreen();
   const imageMask = createEmptyMask();
+  const visibleSessions = sessions
+    .map((session, originalIndex) => ({ session, originalIndex }))
+    .filter(
+      ({ session }) =>
+        session.messages.filter((message) => !message.hidden).length > 0,
+    );
 
   const onDragEnd: OnDragEndResponder = (result) => {
     const { destination, source } = result;
@@ -207,7 +222,11 @@ export function ImageChatList(props: { narrow?: boolean }) {
       return;
     }
 
-    moveSession(source.index, destination.index);
+    const from = visibleSessions[source.index]?.originalIndex;
+    const to = visibleSessions[destination.index]?.originalIndex;
+    if (from === undefined || to === undefined) return;
+
+    moveSession(from, to);
   };
 
   return (
@@ -219,34 +238,36 @@ export function ImageChatList(props: { narrow?: boolean }) {
             ref={provided.innerRef}
             {...provided.droppableProps}
           >
-            {sessions.map((item, i) => (
-              <ChatItem
-                title={item.topic}
-                time={new Date(item.lastUpdate).toLocaleString()}
-                count={
-                  item.messages.filter((message) => !message.hidden).length
-                }
-                key={item.id}
-                id={item.id}
-                index={i}
-                selected={i === selectedIndex}
-                onClick={() => {
-                  selectSession(i);
-                  navigate(Path.Sd, { state: { showDetail: true } });
-                }}
-                onArchive={async () => {
-                  if (
-                    (!props.narrow && !isMobileScreen) ||
-                    (await showConfirm("确定归档这个对话吗？"))
-                  ) {
-                    imageChatStore.deleteSession(i);
+            {visibleSessions.map(
+              ({ session: item, originalIndex: i }, index) => (
+                <ChatItem
+                  title={item.topic}
+                  time={new Date(item.lastUpdate).toLocaleString()}
+                  count={
+                    item.messages.filter((message) => !message.hidden).length
                   }
-                }}
-                narrow={props.narrow}
-                mask={imageMask}
-                activePaths={[Path.Sd]}
-              />
-            ))}
+                  key={item.id}
+                  id={item.id}
+                  index={index}
+                  selected={i === selectedIndex}
+                  onClick={() => {
+                    selectSession(i);
+                    navigate(Path.Sd, { state: { showDetail: true } });
+                  }}
+                  onArchive={async () => {
+                    if (
+                      (!props.narrow && !isMobileScreen) ||
+                      (await showConfirm("确定归档这个对话吗？"))
+                    ) {
+                      imageChatStore.deleteSession(i);
+                    }
+                  }}
+                  narrow={props.narrow}
+                  mask={imageMask}
+                  activePaths={[Path.Sd]}
+                />
+              ),
+            )}
             {provided.placeholder}
           </div>
         )}

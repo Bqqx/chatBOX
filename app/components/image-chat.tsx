@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import clsx from "clsx";
 
 import chatStyles from "./chat.module.scss";
@@ -21,12 +27,16 @@ import {
   useImageChatStore,
 } from "../store";
 import { copyToClipboard, useMobileScreen } from "../utils";
+import { compressImage } from "../utils/chat";
 import { ImagePreviewModal } from "./image-preview";
 import { Modal, showPrompt, showToast } from "./ui-lib";
 import { ImageResource } from "../utils/image-resources";
 
 import ReturnIcon from "../icons/return.svg";
 import SendWhiteIcon from "../icons/send-white.svg";
+import ImageIcon from "../icons/image.svg";
+import LoadingButtonIcon from "../icons/loading.svg";
+import DeleteIcon from "../icons/delete.svg";
 import RenameIcon from "../icons/rename.svg";
 import MinIcon from "../icons/min.svg";
 import MaxIcon from "../icons/max.svg";
@@ -34,6 +44,7 @@ import MaxIcon from "../icons/max.svg";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const IMAGE_RATIO_OPTIONS = [
+  "",
   "1:1",
   "2:3",
   "3:2",
@@ -48,6 +59,7 @@ const IMAGE_RATIO_OPTIONS = [
 
 const IMAGE_ENGINE_OPTIONS = ["Nanobanana", "ChatGPT"] as const;
 type ImageEngine = (typeof IMAGE_ENGINE_OPTIONS)[number];
+const MAX_IMAGE_ATTACHMENTS = 3;
 
 const NANO_MODEL_ALIASES: Record<string, string> = {
   "[Rim] gemini-3-pro-image-preview": "「Rim」gemini-3-pro-image-preview",
@@ -59,10 +71,8 @@ function normalizeRelayModelName(engine: ImageEngine, model: string) {
   return NANO_MODEL_ALIASES[name] ?? name;
 }
 
-function getDefaultImageModel(engine: ImageEngine) {
-  return engine === "Nanobanana"
-    ? "「Rim」gemini-3-pro-image-preview"
-    : "gpt-image-2";
+function getDefaultImageModel() {
+  return "";
 }
 
 function isCrossEngineModel(engine: ImageEngine, model?: string) {
@@ -86,7 +96,7 @@ function getStoredImageModel(accessStore: any, engine: ImageEngine) {
     return normalizeRelayModelName(engine, engineModel);
   }
 
-  return getDefaultImageModel(engine);
+  return getDefaultImageModel();
 }
 
 function uniqueModels(models: string[]) {
@@ -106,7 +116,6 @@ function getModelOptions(accessStore: any, engine: ImageEngine) {
   return uniqueModels([
     ...(Array.isArray(storedModels) ? storedModels : []),
     selected,
-    getDefaultImageModel(engine),
   ])
     .map((model) => normalizeRelayModelName(engine, model))
     .filter((model) => !isCrossEngineModel(engine, model));
@@ -209,20 +218,52 @@ function sizeToGeminiImageConfig(size: string) {
   return { aspectRatio: "1:1", imageSize: "2K" };
 }
 
-function buildGenerateContentPayload(prompt: string, size: string) {
-  const imageConfig = sizeToGeminiImageConfig(size);
-  const promptWithParams = `${prompt} [分辨率: ${imageConfig.imageSize}, 比例: ${imageConfig.aspectRatio}]`;
+function dataUrlToImagePart(image: string) {
+  const normalized = normalizeDataImageUrl(image);
+  const match = normalized.match(
+    /^data:(image\/[a-zA-Z+.-]+);base64,([A-Za-z0-9+/=]+)$/,
+  );
+
+  if (match) {
+    return {
+      inlineData: {
+        mimeType: match[1],
+        data: match[2],
+      },
+    };
+  }
+
+  return {
+    fileData: {
+      mimeType: "image/png",
+      fileUri: normalized,
+    },
+  };
+}
+
+function buildGenerateContentPayload(
+  prompt: string,
+  size: string,
+  sourceImages: string[] = [],
+) {
+  const imageConfig = size ? sizeToGeminiImageConfig(size) : undefined;
+  const promptWithParams = imageConfig
+    ? `${prompt} [分辨率: ${imageConfig.imageSize}, 比例: ${imageConfig.aspectRatio}]`
+    : prompt;
 
   return {
     contents: [
       {
         role: "user",
-        parts: [{ text: promptWithParams }],
+        parts: [
+          { text: promptWithParams },
+          ...sourceImages.map(dataUrlToImagePart),
+        ],
       },
     ],
     generationConfig: {
       responseModalities: ["IMAGE"],
-      imageConfig,
+      ...(imageConfig ? { imageConfig } : {}),
     },
   };
 }
@@ -232,13 +273,13 @@ function ratioToOpenAIImageSize(ratio: string) {
     "1:1": "1024x1024",
     "2:3": "1024x1536",
     "3:2": "1536x1024",
-    "9:16": "1152x2048",
-    "16:9": "2048x1152",
-    "3:4": "1536x2048",
-    "4:3": "2048x1536",
-    "4:5": "1536x1920",
-    "5:4": "1920x1536",
-    "21:9": "2688x1152",
+    "9:16": "1024x1536",
+    "16:9": "1536x1024",
+    "3:4": "1024x1536",
+    "4:3": "1536x1024",
+    "4:5": "1024x1536",
+    "5:4": "1536x1024",
+    "21:9": "1536x1024",
   };
 
   return presets[ratio] ?? "1024x1024";
@@ -249,30 +290,43 @@ function buildOpenAIImagePayload(
   prompt: string,
   ratio: string,
   count: number,
+  sourceImages: string[] = [],
 ) {
+  const imageSize = ratio ? ratioToOpenAIImageSize(ratio) : undefined;
   return {
-    model,
     prompt,
-    size: ratioToOpenAIImageSize(ratio),
-    quality: "high",
+    ...(imageSize ? { size: imageSize } : {}),
     n: count,
+    model,
+    ...(sourceImages.length > 0
+      ? { image: sourceImages.length === 1 ? sourceImages[0] : sourceImages }
+      : {}),
   };
 }
 
-function buildNanoBananaPayload(prompt: string, size: string) {
-  const imageConfig = sizeToGeminiImageConfig(size);
-  const promptWithParams = `${prompt} [分辨率: ${imageConfig.imageSize}, 比例: ${imageConfig.aspectRatio}]`;
+function buildNanoBananaPayload(
+  prompt: string,
+  size: string,
+  sourceImages: string[] = [],
+) {
+  const imageConfig = size ? sizeToGeminiImageConfig(size) : undefined;
+  const promptWithParams = imageConfig
+    ? `${prompt} [分辨率: ${imageConfig.imageSize}, 比例: ${imageConfig.aspectRatio}]`
+    : prompt;
 
   return {
     contents: [
       {
         role: "user",
-        parts: [{ text: promptWithParams }],
+        parts: [
+          { text: promptWithParams },
+          ...sourceImages.map(dataUrlToImagePart),
+        ],
       },
     ],
     generationConfig: {
       responseModalities: ["IMAGE"],
-      imageConfig,
+      ...(imageConfig ? { imageConfig } : {}),
     },
   };
 }
@@ -430,7 +484,9 @@ function ModelSelector(props: {
   const selectorRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [newModel, setNewModel] = useState("");
-  const currentModel = props.value || props.placeholder;
+  const currentModel = props.options.includes(props.value)
+    ? props.value
+    : props.placeholder;
   const editable = Boolean(props.onAdd && props.onDelete);
 
   useEffect(() => {
@@ -847,6 +903,7 @@ export function ImageChat() {
   );
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const favoritePromptInputRef = useRef<HTMLTextAreaElement>(null);
   const savedEngine = IMAGE_ENGINE_OPTIONS.includes(
     accessStore.imageEngine as ImageEngine,
   )
@@ -862,6 +919,8 @@ export function ImageChat() {
   const [size, setSize] = useState("1:1");
   const [count, setCount] = useState(1);
   const [generating, setGenerating] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [attachImages, setAttachImages] = useState<string[]>([]);
   const [selectedImage, setSelectedImage] = useState<
     ImageResource | undefined
   >();
@@ -869,6 +928,7 @@ export function ImageChat() {
     string | null
   >(null);
   const [showFavoritePrompts, setShowFavoritePrompts] = useState(false);
+  const [favoritePromptDraft, setFavoritePromptDraft] = useState("");
   const [showImageSettings, setShowImageSettings] = useState(false);
   const favoritePrompts = imageChatStore.favoritePrompts ?? [];
   const showMobileDetail =
@@ -917,6 +977,12 @@ export function ImageChat() {
       accessStore.imageApiKey.trim().length > 0
     );
   }, [accessStore.imageApiKey, accessStore.imageUrl]);
+  const hasImageModel = useMemo(() => {
+    const selectedModel = !isCrossEngineModel(engine, model)
+      ? model
+      : getStoredImageModel(accessStore, engine);
+    return normalizeRelayModelName(engine, selectedModel).trim().length > 0;
+  }, [accessStore, engine, model]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -947,10 +1013,21 @@ export function ImageChat() {
   }, [activePromptActionsId]);
 
   useEffect(() => {
+    if (!model.trim()) return;
     if (!isCrossEngineModel(engine, model)) return;
     const nextModel = getStoredImageModel(accessStore, engine);
+    if (!nextModel.trim() || nextModel === model) return;
+
     setModel(nextModel);
     accessStore.update((access) => {
+      const currentEngineModel =
+        engine === "Nanobanana"
+          ? access.imageNanoModel
+          : access.imageChatGPTModel;
+      if (access.imageModel === nextModel && currentEngineModel === nextModel) {
+        return;
+      }
+
       access.imageModel = nextModel;
       if (engine === "Nanobanana") {
         access.imageNanoModel = nextModel;
@@ -1005,7 +1082,7 @@ export function ImageChat() {
 
   function deleteModelOption(targetModel: string) {
     const nextOptions = modelOptions.filter((item) => item !== targetModel);
-    const fallback = nextOptions[0] ?? getDefaultImageModel(engine);
+    const fallback = nextOptions[0] ?? getDefaultImageModel();
     accessStore.update((access) => {
       if (engine === "Nanobanana") {
         access.imageNanoModels = nextOptions;
@@ -1070,15 +1147,109 @@ export function ImageChat() {
     showToast("已收藏提示词");
   }
 
+  function resizeFavoritePromptInput(element = favoritePromptInputRef.current) {
+    if (!element) return;
+    element.style.height = "0px";
+    element.style.height = `${Math.min(element.scrollHeight, 180)}px`;
+  }
+
+  function openFavoritePrompts() {
+    setFavoritePromptDraft("");
+    setShowFavoritePrompts(true);
+    requestAnimationFrame(() => resizeFavoritePromptInput());
+  }
+
+  function addFavoritePromptFromDraft() {
+    const content = favoritePromptDraft.trim();
+    if (!content) return;
+
+    const exists = favoritePrompts.some((item) => item.content === content);
+    imageChatStore.addFavoritePrompt(content);
+    showToast(exists ? "提示词已在收藏中" : "已添加收藏提示词");
+    setFavoritePromptDraft("");
+    requestAnimationFrame(() => resizeFavoritePromptInput());
+  }
+
   function applyFavoritePrompt(content: string) {
     setPrompt(content);
     setShowFavoritePrompts(false);
     requestAnimationFrame(() => inputRef.current?.focus());
   }
 
+  const addImageFiles = useCallback(async (files: File[]) => {
+    const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+    if (imageFiles.length === 0) return;
+
+    setUploading(true);
+    try {
+      const images = await Promise.all(
+        imageFiles
+          .slice(0, MAX_IMAGE_ATTACHMENTS)
+          .map((file) => compressImage(file, 768 * 1024)),
+      );
+
+      setAttachImages((current) => {
+        const nextImages = [...current, ...images].slice(
+          0,
+          MAX_IMAGE_ATTACHMENTS,
+        );
+        if (current.length + images.length > MAX_IMAGE_ATTACHMENTS) {
+          showToast(`最多上传 ${MAX_IMAGE_ATTACHMENTS} 张图片`);
+        }
+        return nextImages;
+      });
+    } catch (error) {
+      showToast(getErrorMessage(error));
+    } finally {
+      setUploading(false);
+    }
+  }, []);
+
+  const handlePasteImage = useCallback(
+    (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+      const files = Array.from(event.clipboardData.items)
+        .filter(
+          (item) => item.kind === "file" && item.type.startsWith("image/"),
+        )
+        .map((item) => item.getAsFile())
+        .filter((file): file is File => Boolean(file));
+
+      if (files.length === 0) return;
+      event.preventDefault();
+      void addImageFiles(files);
+    },
+    [addImageFiles],
+  );
+
+  function uploadImage() {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/*,.heic,.heif";
+    fileInput.multiple = true;
+    fileInput.onchange = (event: Event) => {
+      const target = event.target as HTMLInputElement;
+      const files = Array.from(target.files ?? []);
+      void addImageFiles(files);
+    };
+    fileInput.click();
+  }
+
   async function sendPrompt(promptText = prompt, clearInput = true) {
     const text = promptText.trim();
     if (!text || generating) return;
+
+    const activeEngine = engine;
+    const activeModel = normalizeRelayModelName(
+      activeEngine,
+      !isCrossEngineModel(activeEngine, model)
+        ? model
+        : getStoredImageModel(accessStore, activeEngine),
+    );
+
+    if (!activeModel.trim()) {
+      showToast("请先设置生图模型名称", undefined, 5000);
+      return;
+    }
 
     if (!canUseImageRelay) {
       showToast(Locale.ImageChat.NeedCustomRelay, undefined, 5000);
@@ -1093,13 +1264,7 @@ export function ImageChat() {
     }
 
     const targetSessionId = session.id;
-    const activeEngine = engine;
-    const activeModel = normalizeRelayModelName(
-      activeEngine,
-      !isCrossEngineModel(activeEngine, model)
-        ? model
-        : getStoredImageModel(accessStore, activeEngine),
-    );
+    const sourceImages = attachImages.slice(0, MAX_IMAGE_ATTACHMENTS);
     accessStore.update((access) => {
       access.imageModel = activeModel;
       if (activeEngine === "Nanobanana") {
@@ -1111,6 +1276,7 @@ export function ImageChat() {
     const userMessage = createImageMessage({
       role: "user",
       content: text,
+      images: sourceImages,
     });
     const assistantMessage = createImageMessage({
       role: "assistant",
@@ -1123,6 +1289,7 @@ export function ImageChat() {
     imageChatStore.addMessages([userMessage, assistantMessage]);
     if (clearInput) {
       setPrompt("");
+      setAttachImages([]);
     }
     setGenerating(true);
 
@@ -1144,7 +1311,13 @@ export function ImageChat() {
         const json = await postJsonWithRetry(
           buildOpenAIImageEndpoint(accessStore.imageUrl),
           headers,
-          buildOpenAIImagePayload(activeModel, text, size, targetCount),
+          buildOpenAIImagePayload(
+            activeModel,
+            text,
+            size,
+            targetCount,
+            sourceImages,
+          ),
         );
         const batchImages = extractImageUrls(json);
         const assistantText = extractAssistantText(json);
@@ -1186,7 +1359,7 @@ export function ImageChat() {
           const json = await postJsonWithRetry(
             requestUrl,
             headers,
-            buildNanoBananaPayload(text, size),
+            buildNanoBananaPayload(text, size, sourceImages),
           );
 
           const batchImages = extractImageUrls(json);
@@ -1356,6 +1529,8 @@ export function ImageChat() {
                               className={clsx(styles["image-message-content"], {
                                 [styles["image-message-content-media"]]:
                                   displayImages.length > 0,
+                                [styles["image-message-content-user"]]:
+                                  message.role === "user",
                               })}
                             >
                               {(displayContent ||
@@ -1543,9 +1718,9 @@ export function ImageChat() {
                           <button
                             type="button"
                             className={styles["favorite-prompts-button"]}
-                            onClick={() => setShowFavoritePrompts(true)}
+                            onClick={openFavoritePrompts}
                           >
-                            收藏提示词
+                            查看收藏
                           </button>
                         </div>
                       </div>
@@ -1554,7 +1729,7 @@ export function ImageChat() {
                         <ModelSelector
                           value={model}
                           options={modelOptions}
-                          placeholder={getDefaultImageModel(engine)}
+                          placeholder={getDefaultImageModel()}
                           ariaLabel="生图模型"
                           onSelect={updateModel}
                           onAdd={addModelOption}
@@ -1579,7 +1754,49 @@ export function ImageChat() {
                   <ImageCountStepper value={count} onChange={setCount} />
                 </label>
               </div>
-              <div className={chatStyles["chat-input-panel-inner"]}>
+              <div
+                className={clsx(
+                  chatStyles["chat-input-panel-inner"],
+                  styles["image-input-panel-inner"],
+                )}
+              >
+                {(attachImages.length > 0 || uploading) && (
+                  <div className={styles["image-attach-strip"]}>
+                    {attachImages.map((image, index) => (
+                      <div
+                        key={`${image}-${index}`}
+                        className={styles["image-attach-preview"]}
+                        style={{ backgroundImage: `url("${image}")` }}
+                      >
+                        <button
+                          type="button"
+                          aria-label="删除图片"
+                          onClick={() =>
+                            setAttachImages((images) =>
+                              images.filter((_, i) => i !== index),
+                            )
+                          }
+                        >
+                          <DeleteIcon />
+                        </button>
+                      </div>
+                    ))}
+                    {uploading && (
+                      <div className={styles["image-attach-loading"]}>
+                        <LoadingButtonIcon />
+                      </div>
+                    )}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  className={styles["image-upload-button"]}
+                  onClick={uploadImage}
+                  disabled={uploading || generating}
+                >
+                  {uploading ? <LoadingButtonIcon /> : <ImageIcon />}
+                  <span>{uploading ? "上传中" : "上传图片"}</span>
+                </button>
                 <textarea
                   ref={inputRef}
                   className={chatStyles["chat-input"]}
@@ -1587,6 +1804,7 @@ export function ImageChat() {
                   value={prompt}
                   rows={3}
                   onChange={(e) => setPrompt(e.currentTarget.value)}
+                  onPaste={handlePasteImage}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
@@ -1598,7 +1816,9 @@ export function ImageChat() {
                   icon={<SendWhiteIcon />}
                   text={Locale.ImageChat.Send}
                   type="primary"
-                  disabled={generating || prompt.trim().length === 0}
+                  disabled={
+                    generating || prompt.trim().length === 0 || !hasImageModel
+                  }
                   className={chatStyles["chat-input-send"]}
                   onClick={() => sendPrompt()}
                 />
@@ -1620,6 +1840,27 @@ export function ImageChat() {
                 onClose={() => setShowFavoritePrompts(false)}
               >
                 <div className={styles["favorite-prompts-modal"]}>
+                  <div className={styles["favorite-prompt-add-row"]}>
+                    <textarea
+                      ref={favoritePromptInputRef}
+                      value={favoritePromptDraft}
+                      rows={1}
+                      placeholder="新增收藏提示词"
+                      onChange={(event) => {
+                        setFavoritePromptDraft(event.currentTarget.value);
+                        resizeFavoritePromptInput(event.currentTarget);
+                      }}
+                    />
+                    <button
+                      type="button"
+                      aria-label="添加收藏提示词"
+                      title="添加收藏提示词"
+                      disabled={!favoritePromptDraft.trim()}
+                      onClick={addFavoritePromptFromDraft}
+                    >
+                      +
+                    </button>
+                  </div>
                   {favoritePrompts.length === 0 ? (
                     <div className={styles["favorite-prompts-empty"]}>
                       暂无收藏提示词

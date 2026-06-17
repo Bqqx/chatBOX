@@ -4,6 +4,7 @@ import {
   MouseEvent,
   TouchEvent,
   useEffect,
+  useCallback,
   useMemo,
   useRef,
   useState,
@@ -148,6 +149,15 @@ export function ImagePreviewModal(props: {
       ? resources[currentIndex + 1]
       : undefined;
   const [transform, setTransform] = useState({ scale: 1, x: 0, y: 0 });
+  const [isTouching, setIsTouching] = useState(false);
+  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const imageRef = useRef<HTMLImageElement | null>(null);
+  const transformRef = useRef(transform);
+  const pendingTransformRef = useRef(transform);
+  const transformFrameRef = useRef<number>();
+  const singleClickTimerRef = useRef<number | undefined>(undefined);
+  const suppressNextClickRef = useRef(false);
   const gestureRef = useRef<{
     mode: "none" | "pan" | "pinch";
     startScale: number;
@@ -171,6 +181,50 @@ export function ImagePreviewModal(props: {
   });
 
   useEffect(() => {
+    transformRef.current = transform;
+    pendingTransformRef.current = transform;
+  }, [transform]);
+
+  const applyTransform = useCallback((nextTransform: typeof transform) => {
+    transformRef.current = nextTransform;
+    pendingTransformRef.current = nextTransform;
+
+    if (transformFrameRef.current !== undefined) return;
+
+    transformFrameRef.current = window.requestAnimationFrame(() => {
+      transformFrameRef.current = undefined;
+      setTransform(pendingTransformRef.current);
+    });
+  }, []);
+
+  const updateImageSize = useCallback(() => {
+    const image = imageRef.current;
+    if (!image?.naturalWidth || !image.naturalHeight) return;
+
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+    const isCompact = viewportWidth <= 600;
+    const horizontalPadding = isCompact ? 36 : 56;
+    const topPadding = isCompact ? 18 : 24;
+    const bottomPadding = isCompact ? 18 : 24;
+    const actionSpace = isCompact ? 62 : 68;
+    const maxWidth = Math.max(1, viewportWidth - horizontalPadding);
+    const maxHeight = Math.max(
+      1,
+      viewportHeight - topPadding - bottomPadding - actionSpace,
+    );
+    const scale = Math.min(
+      maxWidth / image.naturalWidth,
+      maxHeight / image.naturalHeight,
+    );
+
+    setImageSize({
+      width: Math.max(1, Math.round(image.naturalWidth * scale)),
+      height: Math.max(1, Math.round(image.naturalHeight * scale)),
+    });
+  }, []);
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         props.onClose();
@@ -186,8 +240,29 @@ export function ImagePreviewModal(props: {
   }, [nextResource, previousResource, props]);
 
   useEffect(() => {
-    setTransform({ scale: 1, x: 0, y: 0 });
-  }, [currentResource.id]);
+    const resetTransform = { scale: 1, x: 0, y: 0 };
+    transformRef.current = resetTransform;
+    pendingTransformRef.current = resetTransform;
+    setTransform(resetTransform);
+    setIsTouching(false);
+    setImageSize({ width: 0, height: 0 });
+    requestAnimationFrame(updateImageSize);
+  }, [currentResource.id, updateImageSize]);
+
+  useEffect(() => {
+    window.addEventListener("resize", updateImageSize);
+    window.visualViewport?.addEventListener("resize", updateImageSize);
+    return () => {
+      window.removeEventListener("resize", updateImageSize);
+      window.visualViewport?.removeEventListener("resize", updateImageSize);
+      if (singleClickTimerRef.current) {
+        window.clearTimeout(singleClickTimerRef.current);
+      }
+      if (transformFrameRef.current !== undefined) {
+        window.cancelAnimationFrame(transformFrameRef.current);
+      }
+    };
+  }, [updateImageSize]);
 
   function stopPreviewClick(event: MouseEvent) {
     event.stopPropagation();
@@ -195,29 +270,41 @@ export function ImagePreviewModal(props: {
 
   function onTouchStart(event: TouchEvent<HTMLDivElement>) {
     event.stopPropagation();
+    suppressNextClickRef.current = false;
+    const currentTransform = transformRef.current;
 
     if (event.touches.length === 2) {
+      suppressNextClickRef.current = true;
       const center = getTouchCenter(event.touches);
+      const stageRect = stageRef.current?.getBoundingClientRect();
+      const relativeCenter = stageRect
+        ? {
+            x: center.x - stageRect.left - stageRect.width / 2,
+            y: center.y - stageRect.top - stageRect.height / 2,
+          }
+        : center;
+      setIsTouching(true);
       gestureRef.current = {
         mode: "pinch",
-        startScale: transform.scale,
-        startX: transform.x,
-        startY: transform.y,
+        startScale: currentTransform.scale,
+        startX: currentTransform.x,
+        startY: currentTransform.y,
         startDistance: getTouchDistance(event.touches),
-        startCenterX: center.x,
-        startCenterY: center.y,
+        startCenterX: relativeCenter.x,
+        startCenterY: relativeCenter.y,
         touchX: 0,
         touchY: 0,
       };
       return;
     }
 
-    if (event.touches.length === 1 && transform.scale > 1) {
+    if (event.touches.length === 1 && currentTransform.scale > 1) {
+      setIsTouching(true);
       gestureRef.current = {
         ...gestureRef.current,
         mode: "pan",
-        startX: transform.x,
-        startY: transform.y,
+        startX: currentTransform.x,
+        startY: currentTransform.y,
         touchX: event.touches[0].clientX,
         touchY: event.touches[0].clientY,
       };
@@ -228,6 +315,7 @@ export function ImagePreviewModal(props: {
     const gesture = gestureRef.current;
     if (gesture.mode === "none") return;
 
+    suppressNextClickRef.current = true;
     event.preventDefault();
     event.stopPropagation();
 
@@ -237,17 +325,30 @@ export function ImagePreviewModal(props: {
           (getTouchDistance(event.touches) / gesture.startDistance),
       );
       const center = getTouchCenter(event.touches);
-      setTransform({
+      const stageRect = stageRef.current?.getBoundingClientRect();
+      const relativeCenter = stageRect
+        ? {
+            x: center.x - stageRect.left - stageRect.width / 2,
+            y: center.y - stageRect.top - stageRect.height / 2,
+          }
+        : center;
+      applyTransform({
         scale: nextScale,
-        x: gesture.startX + center.x - gesture.startCenterX,
-        y: gesture.startY + center.y - gesture.startCenterY,
+        x:
+          relativeCenter.x -
+          ((gesture.startCenterX - gesture.startX) / gesture.startScale) *
+            nextScale,
+        y:
+          relativeCenter.y -
+          ((gesture.startCenterY - gesture.startY) / gesture.startScale) *
+            nextScale,
       });
       return;
     }
 
     if (gesture.mode === "pan" && event.touches.length === 1) {
-      setTransform({
-        scale: transform.scale,
+      applyTransform({
+        scale: transformRef.current.scale,
         x: gesture.startX + event.touches[0].clientX - gesture.touchX,
         y: gesture.startY + event.touches[0].clientY - gesture.touchY,
       });
@@ -256,77 +357,113 @@ export function ImagePreviewModal(props: {
 
   function onTouchEnd() {
     gestureRef.current.mode = "none";
-    setTransform((value) =>
-      value.scale <= 1.02 ? { scale: 1, x: 0, y: 0 } : value,
+    setIsTouching(false);
+    const currentTransform = transformRef.current;
+    applyTransform(
+      currentTransform.scale <= 1.02
+        ? { scale: 1, x: 0, y: 0 }
+        : currentTransform,
     );
   }
 
   function toggleZoom(event: MouseEvent<HTMLImageElement>) {
     event.stopPropagation();
+    if (singleClickTimerRef.current) {
+      window.clearTimeout(singleClickTimerRef.current);
+      singleClickTimerRef.current = undefined;
+    }
     setTransform((value) =>
       value.scale > 1 ? { scale: 1, x: 0, y: 0 } : { scale: 2.4, x: 0, y: 0 },
     );
   }
 
+  function closeFromImageClick(event: MouseEvent<HTMLImageElement>) {
+    event.stopPropagation();
+    if (suppressNextClickRef.current) {
+      suppressNextClickRef.current = false;
+      return;
+    }
+
+    if (singleClickTimerRef.current) {
+      window.clearTimeout(singleClickTimerRef.current);
+    }
+    singleClickTimerRef.current = window.setTimeout(() => {
+      props.onClose();
+      singleClickTimerRef.current = undefined;
+    }, 220);
+  }
+
   return (
-    <div className={styles.overlay} onClick={props.onClose}>
+    <div className={styles.overlay}>
       <div
         className={styles.backdrop}
         style={{ backgroundImage: `url("${currentResource.image}")` }}
       />
       <div className={styles.previewFrame} onClick={stopPreviewClick}>
-        <div
-          className={styles.stage}
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
-          onTouchCancel={onTouchEnd}
-        >
-          <img
-            src={currentResource.image}
-            alt={currentResource.topic}
-            onDoubleClick={toggleZoom}
+        <div className={styles.previewContent}>
+          <div
+            ref={stageRef}
+            className={`${styles.stage} ${
+              isTouching ? styles.isGesturing : ""
+            }`}
             style={{
-              transform: `translate3d(${transform.x}px, ${transform.y}px, 0) scale(${transform.scale})`,
+              width: imageSize.width ? `${imageSize.width}px` : undefined,
+              height: imageSize.height ? `${imageSize.height}px` : undefined,
             }}
-          />
-          {previousResource && transform.scale === 1 && (
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+            onTouchCancel={onTouchEnd}
+          >
+            <img
+              ref={imageRef}
+              src={currentResource.image}
+              alt={currentResource.topic}
+              onLoad={updateImageSize}
+              onClick={closeFromImageClick}
+              onDoubleClick={toggleZoom}
+              style={{
+                transform: `translate3d(${transform.x}px, ${transform.y}px, 0) scale(${transform.scale})`,
+              }}
+            />
+            {previousResource && transform.scale === 1 && (
+              <button
+                type="button"
+                className={`${styles.navButton} ${styles.previousButton}`}
+                aria-label="上一张"
+                onClick={() => props.onSelect?.(previousResource)}
+              >
+                {"<"}
+              </button>
+            )}
+            {nextResource && transform.scale === 1 && (
+              <button
+                type="button"
+                className={`${styles.navButton} ${styles.nextButton}`}
+                aria-label="下一张"
+                onClick={() => props.onSelect?.(nextResource)}
+              >
+                {">"}
+              </button>
+            )}
+          </div>
+          <div className={styles.actionPill} onClick={stopPreviewClick}>
             <button
               type="button"
-              className={`${styles.navButton} ${styles.previousButton}`}
-              aria-label="上一张"
-              onClick={() => props.onSelect?.(previousResource)}
+              className={styles.actionButton}
+              onClick={() => downloadImage(currentResource)}
             >
-              {"<"}
+              <span>下载</span>
             </button>
-          )}
-          {nextResource && transform.scale === 1 && (
             <button
               type="button"
-              className={`${styles.navButton} ${styles.nextButton}`}
-              aria-label="下一张"
-              onClick={() => props.onSelect?.(nextResource)}
+              className={`${styles.actionButton} ${styles.dangerButton}`}
+              onClick={() => props.onDelete(currentResource)}
             >
-              {">"}
+              <span>删除</span>
             </button>
-          )}
+          </div>
         </div>
-      </div>
-      <div className={styles.actionPill} onClick={stopPreviewClick}>
-        <button
-          type="button"
-          className={styles.actionButton}
-          onClick={() => downloadImage(currentResource)}
-        >
-          <span>下载</span>
-        </button>
-        <button
-          type="button"
-          className={`${styles.actionButton} ${styles.dangerButton}`}
-          onClick={() => props.onDelete(currentResource)}
-        >
-          <span>删除</span>
-        </button>
       </div>
     </div>
   );

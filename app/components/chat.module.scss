@@ -100,6 +100,51 @@
   }
 }
 
+@media only screen and (max-width: 600px) {
+  .chat-input-toolbar-actions {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+
+    .chat-input-action {
+      width: auto !important;
+      min-width: 0;
+      height: 24px;
+      padding: 4px 7px;
+      justify-content: flex-start;
+      box-sizing: border-box;
+      transition: none;
+
+      .icon {
+        flex: 0 0 auto;
+      }
+
+      .text {
+        min-width: 0;
+        padding-left: 5px;
+        opacity: 1;
+        transform: none;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        transition: none;
+      }
+
+      &:hover {
+        width: auto !important;
+        transition-delay: 0s;
+
+        .text {
+          transition-delay: 0s;
+        }
+      }
+    }
+
+    .chat-input-actions-end {
+      display: none;
+    }
+  }
+}
+
 .prompt-toast {
   position: absolute;
   bottom: -50px;
@@ -437,7 +482,7 @@
 .chat-message-item {
   box-sizing: border-box;
   max-width: 100%;
-  margin-top: 10px;
+  margin-top: 6px;
   border-radius: 10px;
   background-color: rgba(0, 0, 0, 0.05);
   padding: 10px;
@@ -458,7 +503,7 @@
   border: var(--border-in-light);
   position: relative;
   transition: all ease 0.3s;
-  margin-top: 10px;
+  margin-top: 6px;
   font-size: 14px;
   user-select: text;
   word-break: break-word;

@@ -6,11 +6,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background:
-    radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.1), transparent 42%),
+  background: radial-gradient(
+      circle at 50% 42%,
+      rgba(255, 255, 255, 0.1),
+      transparent 42%
+    ),
     rgba(0, 0, 0, 0.58);
   color: #fff;
-  cursor: zoom-out;
+  cursor: default;
 }
 
 .backdrop {
@@ -26,8 +29,7 @@
     content: "";
     position: absolute;
     inset: 0;
-    background:
-      linear-gradient(180deg, rgba(8, 10, 12, 0.72), transparent 26%),
+    background: linear-gradient(180deg, rgba(8, 10, 12, 0.72), transparent 26%),
       linear-gradient(0deg, rgba(8, 10, 12, 0.78), transparent 34%),
       rgba(0, 0, 0, 0.26);
   }
@@ -39,12 +41,29 @@
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  padding: 76px 28px 116px;
+  padding: max(24px, env(safe-area-inset-top)) 28px
+    max(24px, env(safe-area-inset-bottom));
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: default;
   pointer-events: none;
+}
+
+.previewContent {
+  max-width: calc(100vw - 56px);
+  max-height: calc(
+    var(--full-height) - max(24px, env(safe-area-inset-top)) - max(
+        24px,
+        env(safe-area-inset-bottom)
+      )
+  );
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  pointer-events: auto;
 }
 
 .stage {
@@ -53,32 +72,45 @@
   align-items: center;
   justify-content: center;
   max-width: calc(100vw - 56px);
-  max-height: calc(var(--full-height) - 192px);
+  max-height: calc(
+    var(--full-height) - max(24px, env(safe-area-inset-top)) - max(
+        24px,
+        env(safe-area-inset-bottom)
+      ) - 68px
+  );
   pointer-events: auto;
   touch-action: none;
+  overflow: visible;
+  will-change: transform;
 
   img {
-    width: auto;
-    height: auto;
+    display: block;
+    width: 100%;
+    height: 100%;
     max-width: 100%;
-    max-height: calc(var(--full-height) - 192px);
+    max-height: 100%;
     object-fit: contain;
-    border-radius: 10px;
-    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.42);
-    background: rgba(255, 255, 255, 0.04);
+    border-radius: 0;
+    filter: drop-shadow(0 20px 46px rgba(0, 0, 0, 0.34));
+    background: transparent;
     transform-origin: center center;
     transition: transform 0.12s ease;
+    will-change: transform;
+    cursor: zoom-out;
     user-select: none;
     -webkit-user-drag: none;
   }
 }
 
+.isGesturing {
+  img {
+    transition: none;
+  }
+}
+
 .actionPill {
-  position: fixed;
+  position: relative;
   z-index: 2;
-  left: 50%;
-  bottom: max(28px, env(safe-area-inset-bottom));
-  transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -163,21 +195,36 @@
 
 @media only screen and (max-width: 600px) {
   .previewFrame {
-    padding: 70px 18px 112px;
+    padding: max(18px, env(safe-area-inset-top)) 18px
+      max(18px, env(safe-area-inset-bottom));
+  }
+
+  .previewContent {
+    max-width: calc(100vw - 36px);
+    max-height: calc(
+      var(--full-height) - max(18px, env(safe-area-inset-top)) - max(
+          18px,
+          env(safe-area-inset-bottom)
+        )
+    );
+    gap: 8px;
   }
 
   .stage {
     max-width: calc(100vw - 36px);
-    max-height: calc(var(--full-height) - 182px);
+    max-height: calc(
+      var(--full-height) - max(18px, env(safe-area-inset-top)) - max(
+          18px,
+          env(safe-area-inset-bottom)
+        ) - 62px
+    );
 
     img {
-      max-height: calc(var(--full-height) - 182px);
-      border-radius: 8px;
+      max-height: 100%;
     }
   }
 
   .actionPill {
-    bottom: max(22px, env(safe-area-inset-bottom));
     padding: 7px;
   }
 

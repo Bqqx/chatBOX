@@ -84,10 +84,10 @@ const DEFAULT_ACCESS_STATE = {
   imageApiKey: "",
   imageModel: "gpt-image-1",
   imageEngine: "Nanobanana",
-  imageNanoModel: "「Rim」gemini-3-pro-image-preview",
-  imageChatGPTModel: "gpt-image-2",
-  imageNanoModels: ["「Rim」gemini-3-pro-image-preview"],
-  imageChatGPTModels: ["gpt-image-2"],
+  imageNanoModel: "",
+  imageChatGPTModel: "",
+  imageNanoModels: [] as string[],
+  imageChatGPTModels: [] as string[],
 
   // openai
   openaiUrl: DEFAULT_OPENAI_URL,
@@ -324,7 +324,7 @@ export const useAccessStore = createPersistStore(
   }),
   {
     name: StoreKey.Access,
-    version: 3,
+    version: 4,
     migrate(persistedState, version) {
       if (version < 2) {
         const state = persistedState as {
@@ -348,6 +348,8 @@ export const useAccessStore = createPersistStore(
         chatRelayModel?: string;
         imageNanoModel?: string;
         imageNanoModels?: string[];
+        imageChatGPTModel?: string;
+        imageChatGPTModels?: string[];
         imageUseCustomConfig?: boolean;
       };
 
@@ -379,6 +381,37 @@ export const useAccessStore = createPersistStore(
         state.imageNanoModels = Array.from(
           new Set(state.imageNanoModels.map(normalizeNanoModel)),
         );
+      }
+
+      if (version < 4) {
+        const legacyNanoDefaults = new Set([
+          "[Rim] gemini-3-pro-image-preview",
+          "「Rim」gemini-3-pro-image-preview",
+        ]);
+        const legacyChatGPTDefaults = new Set(["gpt-image-2"]);
+
+        if (
+          state.imageNanoModel &&
+          legacyNanoDefaults.has(state.imageNanoModel)
+        ) {
+          state.imageNanoModel = "";
+        }
+        if (
+          state.imageChatGPTModel &&
+          legacyChatGPTDefaults.has(state.imageChatGPTModel)
+        ) {
+          state.imageChatGPTModel = "";
+        }
+        if (Array.isArray(state.imageNanoModels)) {
+          state.imageNanoModels = state.imageNanoModels.filter(
+            (model) => !legacyNanoDefaults.has(model),
+          );
+        }
+        if (Array.isArray(state.imageChatGPTModels)) {
+          state.imageChatGPTModels = state.imageChatGPTModels.filter(
+            (model) => !legacyChatGPTDefaults.has(model),
+          );
+        }
       }
 
       return persistedState as any;

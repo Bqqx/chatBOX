@@ -610,7 +610,12 @@ export function ChatActions(props: {
   }, [chatStore, currentModel, isChatRelayDisplayActive, models, session]);
 
   return (
-    <div className={styles["chat-input-actions"]}>
+    <div
+      className={clsx(
+        styles["chat-input-actions"],
+        styles["chat-input-toolbar-actions"],
+      )}
+    >
       <>
         {couldStop && (
           <ChatAction

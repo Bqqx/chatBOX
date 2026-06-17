@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44" fill="none">
+  <rect x="2" y="2" width="40" height="40" rx="13" fill="url(#chatbox_logo_shell)" />
+  <rect x="2.75" y="2.75" width="38.5" height="38.5" rx="12.25" stroke="url(#chatbox_logo_edge)" stroke-width="1.5" />
+  <path d="M14.3 15.35C14.3 12.7 16.45 10.55 19.1 10.55H29.7V16.25H20.05C18.65 16.25 17.5 17.39 17.5 18.8V25.2C17.5 26.61 18.65 27.75 20.05 27.75H25.5V33.45H19.1C16.45 33.45 14.3 31.3 14.3 28.65V15.35Z" fill="url(#chatbox_logo_c)" />
+  <path d="M22.2 16.25H29.55C31.28 16.25 32.7 17.67 32.7 19.4C32.7 20.58 32.06 21.62 31.1 22.16C32.34 22.66 33.2 23.88 33.2 25.3C33.2 27.18 31.68 28.7 29.8 28.7H22.2V24.2H28.05C28.66 24.2 29.15 23.71 29.15 23.1C29.15 22.49 28.66 22 28.05 22H22.2V16.25Z" fill="url(#chatbox_logo_b)" />
+  <path d="M10.9 30.85C9.92 30.85 9.11 30.05 9.11 29.06V15.02C9.11 14.03 9.92 13.23 10.9 13.23H13.32V18.3H12.52V26.8H13.32V30.85H10.9Z" fill="#BDEEFF" opacity=".82" />
+  <circle cx="31.25" cy="11.95" r="2.25" fill="#FFE4A3" />
+  <circle cx="10.6" cy="32.7" r="1.45" fill="#38D9C2" />
+  <defs>
+    <linearGradient id="chatbox_logo_shell" x1="6" y1="5.5" x2="38.5" y2="39" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#143949" />
+      <stop offset=".48" stop-color="#10212D" />
+      <stop offset="1" stop-color="#070B12" />
+    </linearGradient>
+    <linearGradient id="chatbox_logo_edge" x1="7" y1="5" x2="36" y2="40" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7DF4FF" />
+      <stop offset=".5" stop-color="#267DFF" stop-opacity=".72" />
+      <stop offset="1" stop-color="#FFE1A1" stop-opacity=".9" />
+    </linearGradient>
+    <linearGradient id="chatbox_logo_c" x1="14.3" y1="10.55" x2="29.94" y2="32.32" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E8FBFF" />
+      <stop offset=".52" stop-color="#53D9FF" />
+      <stop offset="1" stop-color="#176DFF" />
+    </linearGradient>
+    <linearGradient id="chatbox_logo_b" x1="22.2" y1="16.25" x2="31.17" y2="29.79" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF4CF" />
+      <stop offset=".5" stop-color="#61E7D0" />
+      <stop offset="1" stop-color="#2C83FF" />
+    </linearGradient>
+  </defs>
+</svg>
