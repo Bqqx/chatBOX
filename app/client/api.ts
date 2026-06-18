@@ -418,6 +418,27 @@ export function getHeaders(ignoreHeaders: boolean = false) {
     accessStore.provider === ServiceProvider.OpenAI &&
     validString(accessStore.openaiUrl) &&
     normalizeApiBaseUrl(accessStore.openaiUrl).startsWith("http");
+  const providerBaseUrl =
+    modelConfig.providerName === ServiceProvider.Google
+      ? accessStore.googleUrl
+      : modelConfig.providerName === ServiceProvider.Anthropic
+      ? accessStore.anthropicUrl
+      : modelConfig.providerName === ServiceProvider.Moonshot
+      ? accessStore.moonshotUrl
+      : modelConfig.providerName === ServiceProvider.DeepSeek
+      ? accessStore.deepseekUrl
+      : modelConfig.providerName === ServiceProvider.XAI
+      ? accessStore.xaiUrl
+      : modelConfig.providerName === ServiceProvider.SiliconFlow
+      ? accessStore.siliconflowUrl
+      : modelConfig.providerName === ServiceProvider["302.AI"]
+      ? accessStore.ai302Url
+      : "";
+  const shouldProxyProviderBaseUrl =
+    accessStore.useCustomConfig &&
+    !clientConfig?.isApp &&
+    validString(providerBaseUrl) &&
+    normalizeApiBaseUrl(providerBaseUrl).startsWith("http");
 
   if (
     isChatRelay &&
@@ -433,6 +454,8 @@ export function getHeaders(ignoreHeaders: boolean = false) {
     headers["x-base-url"] = normalizeApiBaseUrl(accessStore.customUrl);
   } else if (shouldProxyCustomOpenAI) {
     headers["x-base-url"] = normalizeApiBaseUrl(accessStore.openaiUrl);
+  } else if (shouldProxyProviderBaseUrl) {
+    headers["x-base-url"] = normalizeApiBaseUrl(providerBaseUrl);
   }
 
   return headers;

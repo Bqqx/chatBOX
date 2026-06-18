@@ -19,8 +19,6 @@ import React, {
   MouseEvent,
   useEffect,
   useState,
-  useCallback,
-  useRef,
 } from "react";
 import { IconButton } from "./button";
 import { Avatar } from "./emoji";
@@ -57,6 +55,7 @@ export function ListItem(props: {
   children?: JSX.Element | JSX.Element[];
   icon?: JSX.Element;
   className?: string;
+  style?: CSSProperties;
   onClick?: (e: MouseEvent) => void;
   vertical?: boolean;
 }) {
@@ -69,6 +68,7 @@ export function ListItem(props: {
         },
         props.className,
       )}
+      style={props.style}
       onClick={props.onClick}
     >
       <div className={styles["list-header"]}>
@@ -211,12 +211,19 @@ export type ToastProps = {
     onClick: () => void;
   };
   onClose?: () => void;
+  variant?: "default" | "success" | "warning";
 };
 
 export function Toast(props: ToastProps) {
   return (
     <div className={styles["toast-container"]}>
-      <div className={styles["toast-content"]}>
+      <div
+        className={clsx(
+          styles["toast-content"],
+          styles[`toast-content-${props.variant ?? "default"}`],
+        )}
+      >
+        <span className={styles["toast-mark"]}></span>
         <span>{props.content}</span>
         {props.action && (
           <button
@@ -238,6 +245,7 @@ export function showToast(
   content: string,
   action?: ToastProps["action"],
   delay = 3000,
+  variant: ToastProps["variant"] = "default",
 ) {
   const div = document.createElement("div");
   div.className = styles.show;
@@ -257,7 +265,14 @@ export function showToast(
     close();
   }, delay);
 
-  root.render(<Toast content={content} action={action} onClose={close} />);
+  root.render(
+    <Toast
+      content={content}
+      action={action}
+      onClose={close}
+      variant={variant}
+    />,
+  );
 }
 
 export type InputProps = React.HTMLProps<HTMLTextAreaElement> & {
@@ -554,41 +569,6 @@ export function Selector<T>(props: {
           })}
         </List>
       </div>
-    </div>
-  );
-}
-export function FullScreen(props: any) {
-  const { children, right = 10, top = 10, ...rest } = props;
-  const ref = useRef<HTMLDivElement>();
-  const [fullScreen, setFullScreen] = useState(false);
-  const toggleFullscreen = useCallback(() => {
-    if (!document.fullscreenElement) {
-      ref.current?.requestFullscreen();
-    } else {
-      document.exitFullscreen();
-    }
-  }, []);
-  useEffect(() => {
-    const handleScreenChange = (e: any) => {
-      if (e.target === ref.current) {
-        setFullScreen(!!document.fullscreenElement);
-      }
-    };
-    document.addEventListener("fullscreenchange", handleScreenChange);
-    return () => {
-      document.removeEventListener("fullscreenchange", handleScreenChange);
-    };
-  }, []);
-  return (
-    <div ref={ref} style={{ position: "relative" }} {...rest}>
-      <div style={{ position: "absolute", right, top }}>
-        <IconButton
-          icon={fullScreen ? <MinIcon /> : <MaxIcon />}
-          onClick={toggleFullscreen}
-          bordered
-        />
-      </div>
-      {children}
     </div>
   );
 }

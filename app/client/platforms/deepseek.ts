@@ -11,15 +11,9 @@ import {
   useAppConfig,
   useChatStore,
   ChatMessageTool,
-  usePluginStore,
 } from "@/app/store";
 import { streamWithThink } from "@/app/utils/chat";
-import {
-  ChatOptions,
-  getHeaders,
-  LLMApi,
-  LLMModel,
-} from "../api";
+import { ChatOptions, getHeaders, LLMApi, LLMModel } from "../api";
 import { getClientConfig } from "@/app/config/client";
 import {
   getMessageTextContent,
@@ -28,21 +22,31 @@ import {
 } from "@/app/utils";
 import { RequestPayload } from "./openai";
 import { fetch } from "@/app/utils/stream";
+import { getBearerToken, normalizeApiBaseUrl } from "../api";
+
+interface DeepSeekListModelResponse {
+  object: string;
+  data?: Array<{
+    id: string;
+    object: string;
+    owned_by: string;
+  }>;
+}
 
 export class DeepSeekApi implements LLMApi {
-  private disableListModels = true;
+  private disableListModels = false;
 
   path(path: string): string {
     const accessStore = useAccessStore.getState();
+    const isApp = !!getClientConfig()?.isApp;
 
     let baseUrl = "";
 
-    if (accessStore.useCustomConfig) {
+    if (accessStore.useCustomConfig && isApp) {
       baseUrl = accessStore.deepseekUrl;
     }
 
     if (baseUrl.length === 0) {
-      const isApp = !!getClientConfig()?.isApp;
       const apiPath = ApiPath.DeepSeek;
       baseUrl = isApp ? DEEPSEEK_BASE_URL : apiPath;
     }
@@ -137,17 +141,12 @@ export class DeepSeekApi implements LLMApi {
       );
 
       if (shouldStream) {
-        const [tools, funcs] = usePluginStore
-          .getState()
-          .getAsTools(
-            useChatStore.getState().currentSession().mask?.plugin || [],
-          );
         return streamWithThink(
           chatPath,
           requestPayload,
           getHeaders(),
-          tools as any,
-          funcs,
+          [] as any,
+          {},
           controller,
           // parseSSE
           (text: string, runTools: ChatMessageTool[]) => {
@@ -248,6 +247,56 @@ export class DeepSeekApi implements LLMApi {
   }
 
   async models(): Promise<LLMModel[]> {
-    return DEFAULT_MODELS.slice();
+    if (this.disableListModels) {
+      return DEFAULT_MODELS.slice();
+    }
+
+    const accessStore = useAccessStore.getState();
+    const clientConfig = getClientConfig();
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    };
+    const bearerToken = getBearerToken(accessStore.deepseekApiKey);
+    if (bearerToken) {
+      headers.Authorization = bearerToken;
+    }
+    if (
+      !clientConfig?.isApp &&
+      accessStore.deepseekUrl &&
+      normalizeApiBaseUrl(accessStore.deepseekUrl).startsWith("http")
+    ) {
+      headers["x-base-url"] = normalizeApiBaseUrl(accessStore.deepseekUrl);
+    }
+
+    const res = await fetch(this.path(DeepSeek.ListModelPath), {
+      method: "GET",
+      headers,
+    });
+
+    if (!res.ok) {
+      return [];
+    }
+
+    const resJson = (await res.json()) as DeepSeekListModelResponse;
+    const chatModels = resJson.data?.filter((m) => !!m.id);
+
+    if (!chatModels?.length) {
+      return [];
+    }
+
+    let seq = 1000;
+    return chatModels.map((m) => ({
+      name: m.id,
+      displayName: m.id,
+      available: true,
+      sorted: seq++,
+      provider: {
+        id: "deepseek",
+        providerName: "DeepSeek",
+        providerType: "deepseek",
+        sorted: 13,
+      },
+    }));
   }
 }

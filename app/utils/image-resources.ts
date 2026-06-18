@@ -8,6 +8,7 @@ export type ImageResource = {
   image: string;
   topic: string;
   createdAt: number;
+  kind?: "generated" | "reference";
 };
 
 export type ImageResourceTimeFilter = "all" | "today" | "week";
@@ -42,6 +43,8 @@ export function extractImagesFromText(text: string) {
 export function getImageResources(sessions: ImageChatSession[]) {
   return sessions.flatMap((session) =>
     session.messages.flatMap((message) => {
+      if (message.role !== "assistant") return [];
+
       const images = Array.from(
         new Set([
           ...(message.images ?? []),
@@ -57,6 +60,7 @@ export function getImageResources(sessions: ImageChatSession[]) {
         image,
         topic: session.topic,
         createdAt: message.createdAt,
+        kind: "generated" as const,
       }));
     }),
   );

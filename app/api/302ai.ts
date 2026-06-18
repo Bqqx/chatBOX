@@ -44,7 +44,8 @@ async function request(req: NextRequest) {
   // alibaba use base url or just remove the path
   let path = `${req.nextUrl.pathname}`.replaceAll(ApiPath["302.AI"], "");
 
-  let baseUrl = serverConfig.ai302Url || AI302_BASE_URL;
+  let baseUrl =
+    req.headers.get("x-base-url") || serverConfig.ai302Url || AI302_BASE_URL;
 
   if (!baseUrl.startsWith("http")) {
     baseUrl = `https://${baseUrl}`;

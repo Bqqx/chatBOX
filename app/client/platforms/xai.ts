@@ -6,14 +6,15 @@ import {
   useAppConfig,
   useChatStore,
   ChatMessageTool,
-  usePluginStore,
 } from "@/app/store";
 import { stream } from "@/app/utils/chat";
 import {
   ChatOptions,
+  getBearerToken,
   getHeaders,
   LLMApi,
   LLMModel,
+  normalizeApiBaseUrl,
 } from "../api";
 import { getClientConfig } from "@/app/config/client";
 import { getTimeoutMSByModel } from "@/app/utils";
@@ -22,19 +23,19 @@ import { RequestPayload } from "./openai";
 import { fetch } from "@/app/utils/stream";
 
 export class XAIApi implements LLMApi {
-  private disableListModels = true;
+  private disableListModels = false;
 
   path(path: string): string {
     const accessStore = useAccessStore.getState();
 
     let baseUrl = "";
+    const isApp = !!getClientConfig()?.isApp;
 
-    if (accessStore.useCustomConfig) {
+    if (accessStore.useCustomConfig && isApp) {
       baseUrl = accessStore.xaiUrl;
     }
 
     if (baseUrl.length === 0) {
-      const isApp = !!getClientConfig()?.isApp;
       const apiPath = ApiPath.XAI;
       baseUrl = isApp ? XAI_BASE_URL : apiPath;
     }
@@ -103,17 +104,12 @@ export class XAIApi implements LLMApi {
       );
 
       if (shouldStream) {
-        const [tools, funcs] = usePluginStore
-          .getState()
-          .getAsTools(
-            useChatStore.getState().currentSession().mask?.plugin || [],
-          );
         return stream(
           chatPath,
           requestPayload,
           getHeaders(),
-          tools as any,
-          funcs,
+          [] as any,
+          {},
           controller,
           // parseSSE
           (text: string, runTools: ChatMessageTool[]) => {
@@ -184,6 +180,58 @@ export class XAIApi implements LLMApi {
   }
 
   async models(): Promise<LLMModel[]> {
-    return [];
+    if (this.disableListModels) {
+      return [];
+    }
+
+    const accessStore = useAccessStore.getState();
+    const clientConfig = getClientConfig();
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    };
+    const bearerToken = getBearerToken(accessStore.xaiApiKey);
+    if (bearerToken) {
+      headers.Authorization = bearerToken;
+    }
+    if (
+      !clientConfig?.isApp &&
+      accessStore.xaiUrl &&
+      normalizeApiBaseUrl(accessStore.xaiUrl).startsWith("http")
+    ) {
+      headers["x-base-url"] = normalizeApiBaseUrl(accessStore.xaiUrl);
+    }
+
+    const res = await fetch(this.path(XAI.ListModelPath), {
+      method: "GET",
+      headers,
+    });
+
+    if (!res.ok) {
+      return [];
+    }
+
+    const resJson = (await res.json()) as {
+      data?: Array<{ id: string }>;
+    };
+    const chatModels = resJson.data?.filter((m) => !!m.id);
+
+    if (!chatModels?.length) {
+      return [];
+    }
+
+    let seq = 1000;
+    return chatModels.map((m) => ({
+      name: m.id,
+      displayName: m.id,
+      available: true,
+      sorted: seq++,
+      provider: {
+        id: "xai",
+        providerName: "XAI",
+        providerType: "xai",
+        sorted: 11,
+      },
+    }));
   }
 }

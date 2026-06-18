@@ -5,15 +5,9 @@ import {
   useAppConfig,
   useChatStore,
   ChatMessageTool,
-  usePluginStore,
 } from "@/app/store";
 import { stream } from "@/app/utils/chat";
-import {
-  ChatOptions,
-  getHeaders,
-  LLMApi,
-  LLMModel,
-} from "../api";
+import { ChatOptions, getHeaders, LLMApi, LLMModel } from "../api";
 import { getClientConfig } from "@/app/config/client";
 import {
   getMessageTextContent,
@@ -201,17 +195,12 @@ export class ChatGLMApi implements LLMApi {
 
       const shouldStream = !!options.config.stream;
       if (shouldStream) {
-        const [tools, funcs] = usePluginStore
-          .getState()
-          .getAsTools(
-            useChatStore.getState().currentSession().mask?.plugin || [],
-          );
         return stream(
           path,
           requestPayload,
           getHeaders(),
-          tools as any,
-          funcs,
+          [] as any,
+          {},
           controller,
           // parseSSE
           (text: string, runTools: ChatMessageTool[]) => {

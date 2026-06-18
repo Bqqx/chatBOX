@@ -67,10 +67,6 @@ const ResourceManager = dynamic(
   },
 );
 
-const PluginPage = dynamic(async () => (await import("./plugin")).PluginPage, {
-  loading: () => <Loading noLogo />,
-});
-
 const SearchChat = dynamic(
   async () => (await import("./search-chat")).SearchChatPage,
   {
@@ -214,7 +210,6 @@ function Screen() {
             <Route path={Path.NewChat} element={<NewChat />} />
             <Route path={Path.Masks} element={<MaskPage />} />
             <Route path={Path.Resources} element={<ResourceManager />} />
-            <Route path={Path.Plugins} element={<PluginPage />} />
             <Route path={Path.SearchChat} element={<SearchChat />} />
             <Route path={Path.Chat} element={<Chat />} />
             <Route path={Path.Settings} element={<Settings />} />
@@ -244,8 +239,12 @@ export function useLoadData() {
 
   useEffect(() => {
     (async () => {
-      const models = await api.llm.models();
-      config.mergeModels(models);
+      try {
+        const models = await api.llm.models();
+        config.mergeModels(models);
+      } catch (error) {
+        console.warn("[Models] failed to load provider models", error);
+      }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

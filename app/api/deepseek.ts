@@ -44,7 +44,10 @@ async function request(req: NextRequest) {
   // alibaba use base url or just remove the path
   let path = `${req.nextUrl.pathname}`.replaceAll(ApiPath.DeepSeek, "");
 
-  let baseUrl = serverConfig.deepseekUrl || DEEPSEEK_BASE_URL;
+  let baseUrl =
+    req.headers.get("x-base-url") ||
+    serverConfig.deepseekUrl ||
+    DEEPSEEK_BASE_URL;
 
   if (!baseUrl.startsWith("http")) {
     baseUrl = `https://${baseUrl}`;

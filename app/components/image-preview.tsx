@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { Clipboard } from "@capacitor/clipboard";
 import { Capacitor, registerPlugin } from "@capacitor/core";
 
 import { ImageResource } from "../utils/image-resources";
@@ -81,6 +82,91 @@ function getImageFileName(resource: ImageResource) {
   return `image-${formatFileTime(new Date(resource.createdAt))}-${
     resource.imageIndex + 1
   }.${ext}`;
+}
+
+async function getImageBlob(image: string) {
+  if (image.startsWith("data:")) {
+    const [header, data = ""] = image.split(",");
+    const mimeType = header.match(/^data:([^;]+);base64$/)?.[1] ?? "image/png";
+    const binary = atob(data);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return new Blob([bytes], { type: mimeType });
+  }
+
+  const response = await fetch(image);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch image: ${response.status}`);
+  }
+  return response.blob();
+}
+
+async function convertBlobToPng(blob: Blob) {
+  if (blob.type === "image/png") return blob;
+
+  const bitmap = await createImageBitmap(blob);
+  const canvas = document.createElement("canvas");
+  canvas.width = bitmap.width;
+  canvas.height = bitmap.height;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Canvas is not available");
+
+  context.drawImage(bitmap, 0, 0);
+  bitmap.close?.();
+
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((pngBlob) => {
+      if (pngBlob) {
+        resolve(pngBlob);
+      } else {
+        reject(new Error("Failed to convert image"));
+      }
+    }, "image/png");
+  });
+}
+
+function blobToDataUrl(blob: Blob) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+}
+
+export async function copyImage(resource: ImageResource) {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const imageDataUrl = resource.image.startsWith("data:")
+        ? resource.image
+        : await blobToDataUrl(await getImageBlob(resource.image));
+      await Clipboard.write({
+        image: imageDataUrl,
+        label: getImageFileName(resource),
+      });
+      showToast("已复制图片");
+      return;
+    } catch (error) {
+      console.warn("[ImagePreview] native image copy failed", error);
+      showToast("复制失败");
+      return;
+    }
+  }
+
+  try {
+    const blob = await convertBlobToPng(await getImageBlob(resource.image));
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        [blob.type]: blob,
+      }),
+    ]);
+    showToast("已复制图片");
+  } catch (error) {
+    console.warn("[ImagePreview] web image copy failed", error);
+    showToast("复制失败");
+  }
 }
 
 export async function downloadImage(resource: ImageResource) {
@@ -394,7 +480,7 @@ export function ImagePreviewModal(props: {
   }
 
   return (
-    <div className={styles.overlay}>
+    <div className={styles.overlay} onClick={props.onClose}>
       <div
         className={styles.backdrop}
         style={{ backgroundImage: `url("${currentResource.image}")` }}
@@ -448,6 +534,13 @@ export function ImagePreviewModal(props: {
             )}
           </div>
           <div className={styles.actionPill} onClick={stopPreviewClick}>
+            <button
+              type="button"
+              className={styles.actionButton}
+              onClick={() => copyImage(currentResource)}
+            >
+              <span>复制</span>
+            </button>
             <button
               type="button"
               className={styles.actionButton}

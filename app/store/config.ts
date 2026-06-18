@@ -127,8 +127,14 @@ export const useAppConfig = createPersistStore(
       const oldModels = get().models;
       const modelMap: Record<string, LLMModel> = {};
 
+      const providerIds = new Set(
+        newModels.map((model) => model.provider?.id).filter(Boolean),
+      );
+
       for (const model of oldModels) {
-        model.available = false;
+        model.available = model.provider?.id
+          ? !providerIds.has(model.provider.id)
+          : model.available;
         modelMap[`${model.name}@${model?.provider?.id}`] = model;
       }
 

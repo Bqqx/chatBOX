@@ -18,12 +18,10 @@ import { SideBar } from "./sidebar";
 import { WindowContent } from "./home";
 import Locale from "../locales";
 import { Path } from "../constant";
-import { normalizeApiBaseUrl } from "../client/api";
 import { getClientConfig } from "../config/client";
 import {
   createImageMessage,
   useAccessStore,
-  useAppConfig,
   useImageChatStore,
 } from "../store";
 import { copyToClipboard, useMobileScreen } from "../utils";
@@ -31,6 +29,10 @@ import { compressImage } from "../utils/chat";
 import { ImagePreviewModal } from "./image-preview";
 import { Modal, showPrompt, showToast } from "./ui-lib";
 import { ImageResource } from "../utils/image-resources";
+import {
+  ensureCompletionNotificationPermission,
+  notifyCompletionWhenBackground,
+} from "../utils/native-notifications";
 
 import ReturnIcon from "../icons/return.svg";
 import SendWhiteIcon from "../icons/send-white.svg";
@@ -38,8 +40,6 @@ import ImageIcon from "../icons/image.svg";
 import LoadingButtonIcon from "../icons/loading.svg";
 import DeleteIcon from "../icons/delete.svg";
 import RenameIcon from "../icons/rename.svg";
-import MinIcon from "../icons/min.svg";
-import MaxIcon from "../icons/max.svg";
 
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -134,8 +134,30 @@ function normalizeGeminiModel(model: string) {
   return name;
 }
 
+function normalizeImageRelayBaseUrl(baseUrl: string) {
+  let url = baseUrl.trim().replace(/\/+$/, "");
+
+  if (url.startsWith("//")) {
+    return `http:${url}`;
+  }
+
+  if (url && !url.startsWith("http") && !url.startsWith("/api/")) {
+    url = url.replace(/^\/+/, "");
+    const host = url.split("/")[0] ?? "";
+    const shouldUseHttp =
+      /^(\d{1,3}\.){3}\d{1,3}(:\d+)?$/.test(host) ||
+      /^\[[0-9a-f:]+\](:\d+)?$/i.test(host) ||
+      /^localhost(:\d+)?$/i.test(host) ||
+      host.includes(":");
+
+    return `${shouldUseHttp ? "http" : "https"}://${url}`;
+  }
+
+  return url;
+}
+
 function buildGenerateContentEndpoint(baseUrl: string, model: string) {
-  const normalizedBaseUrl = normalizeApiBaseUrl(baseUrl);
+  const normalizedBaseUrl = normalizeImageRelayBaseUrl(baseUrl);
   const normalizedModel = normalizeGeminiModel(model);
   const encodedModel = encodeURIComponent(normalizedModel);
   let endpoint = normalizedBaseUrl;
@@ -163,7 +185,7 @@ function buildGenerateContentEndpoint(baseUrl: string, model: string) {
 }
 
 function buildOpenAIImageEndpoint(baseUrl: string) {
-  const normalizedBaseUrl = normalizeApiBaseUrl(baseUrl);
+  const normalizedBaseUrl = normalizeImageRelayBaseUrl(baseUrl);
   let endpoint = normalizedBaseUrl.replace(/\/+$/, "");
   const knownEndpoints = [
     "/v1/images/generations",
@@ -477,6 +499,7 @@ function ModelSelector(props: {
   options: string[];
   placeholder: string;
   ariaLabel: string;
+  displayNames?: Record<string, string>;
   onSelect: (value: string) => void;
   onAdd?: (value: string) => void;
   onDelete?: (value: string) => void;
@@ -484,9 +507,11 @@ function ModelSelector(props: {
   const selectorRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [newModel, setNewModel] = useState("");
-  const currentModel = props.options.includes(props.value)
-    ? props.value
-    : props.placeholder;
+  const hasSelectedValue = props.options.includes(props.value);
+  const currentModel = hasSelectedValue ? props.value : props.placeholder;
+  const currentModelLabel = hasSelectedValue
+    ? props.displayNames?.[currentModel] ?? currentModel
+    : currentModel;
   const editable = Boolean(props.onAdd && props.onDelete);
 
   useEffect(() => {
@@ -528,7 +553,7 @@ function ModelSelector(props: {
         className={styles["model-selector-trigger"]}
         onClick={() => setOpen((value) => !value)}
       >
-        <span>{currentModel}</span>
+        <span>{currentModelLabel}</span>
         <span className={styles["model-selector-arrow"]}>v</span>
       </button>
       {open && (
@@ -536,10 +561,10 @@ function ModelSelector(props: {
           <div className={styles["model-selector-list"]}>
             {props.options.map((model) => (
               <div
-                key={model}
+                key={model || "__empty__"}
                 className={clsx(styles["model-selector-option"], {
                   [styles["model-selector-option-active"]]:
-                    model === currentModel,
+                    hasSelectedValue && model === currentModel,
                   [styles["model-selector-option-readonly"]]: !editable,
                 })}
               >
@@ -551,7 +576,7 @@ function ModelSelector(props: {
                     setOpen(false);
                   }}
                 >
-                  {model}
+                  {props.displayNames?.[model] ?? model}
                 </button>
                 {editable && (
                   <button
@@ -892,7 +917,6 @@ export function ImageChat() {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobileScreen = useMobileScreen();
-  const config = useAppConfig();
   const accessStore = useAccessStore();
   const imageChatStore = useImageChatStore();
   const session = imageChatStore.currentSession();
@@ -958,6 +982,8 @@ export function ImageChat() {
   const sessionImageResources = useMemo(
     () =>
       renderedMessages.flatMap(({ message, displayImages }) => {
+        if (message.role !== "assistant") return [];
+
         return displayImages.map((image, index) => ({
           id: `${session.id}-${message.id}-${index}`,
           sessionId: session.id,
@@ -966,6 +992,7 @@ export function ImageChat() {
           image,
           topic: session.topic,
           createdAt: message.createdAt,
+          kind: "generated" as const,
         }));
       }),
     [renderedMessages, session.id, session.topic],
@@ -1292,9 +1319,10 @@ export function ImageChat() {
       setAttachImages([]);
     }
     setGenerating(true);
+    void ensureCompletionNotificationPermission();
 
     try {
-      const baseUrl = normalizeApiBaseUrl(accessStore.imageUrl);
+      const baseUrl = normalizeImageRelayBaseUrl(accessStore.imageUrl);
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessStore.imageApiKey.trim()}`,
@@ -1333,8 +1361,10 @@ export function ImageChat() {
             message.content = "";
             message.images = displayImages;
             message.status = undefined;
+            message.createdAt = Date.now();
           },
         );
+        void notifyCompletionWhenBackground();
         return;
       }
 
@@ -1397,13 +1427,17 @@ export function ImageChat() {
         message.content = errors.length > 0 ? errors.join("\n") : "";
         message.images = displayImages;
         message.status = errors.length > 0 ? "error" : undefined;
+        message.createdAt = Date.now();
       });
+      void notifyCompletionWhenBackground();
     } catch (error) {
       const message = getErrorMessage(error);
       imageChatStore.updateMessage(targetSessionId, assistantId, (item) => {
         item.content = message;
         item.status = "error";
+        item.createdAt = Date.now();
       });
+      void notifyCompletionWhenBackground();
     } finally {
       setGenerating(false);
     }
@@ -1462,21 +1496,6 @@ export function ImageChat() {
                     onClick={updateSessionTopic}
                   />
                 </div>
-                {!isMobileScreen && (
-                  <div className="window-action-button">
-                    <IconButton
-                      aria={Locale.Chat.Actions.FullScreen}
-                      icon={config.tightBorder ? <MinIcon /> : <MaxIcon />}
-                      bordered
-                      onClick={() => {
-                        config.update(
-                          (config) =>
-                            (config.tightBorder = !config.tightBorder),
-                        );
-                      }}
-                    />
-                  </div>
-                )}
               </div>
             </div>
 
@@ -1609,10 +1628,9 @@ export function ImageChat() {
                                 )}
                               {displayImages.length > 0 && (
                                 <div className={styles["image-grid"]}>
-                                  {displayImages.map((image, index) => (
-                                    <ImageResult
-                                      key={`${message.id}-${index}`}
-                                      resource={{
+                                  {displayImages.map((image, index) =>
+                                    (() => {
+                                      const resource: ImageResource = {
                                         id: `${session.id}-${message.id}-${index}`,
                                         sessionId: session.id,
                                         messageId: message.id,
@@ -1620,10 +1638,21 @@ export function ImageChat() {
                                         image,
                                         topic: session.topic,
                                         createdAt: message.createdAt,
-                                      }}
-                                      onOpen={setSelectedImage}
-                                    />
-                                  ))}
+                                        kind:
+                                          message.role === "assistant"
+                                            ? "generated"
+                                            : "reference",
+                                      };
+
+                                      return (
+                                        <ImageResult
+                                          key={`${message.id}-${index}`}
+                                          resource={resource}
+                                          onOpen={setSelectedImage}
+                                        />
+                                      );
+                                    })(),
+                                  )}
                                   {Array.from({ length: deletedImages }).map(
                                     (_, index) => (
                                       <div
@@ -1745,6 +1774,7 @@ export function ImageChat() {
                     value={size}
                     options={IMAGE_RATIO_OPTIONS}
                     placeholder="1:1"
+                    displayNames={{ "": "原图比例" }}
                     ariaLabel={Locale.ImageChat.Size}
                     onSelect={setSize}
                   />
@@ -1898,7 +1928,11 @@ export function ImageChat() {
           {selectedImage && (
             <ImagePreviewModal
               resource={selectedImage}
-              resources={sessionImageResources}
+              resources={
+                selectedImage.kind === "reference"
+                  ? [selectedImage]
+                  : sessionImageResources
+              }
               currentResourceId={selectedImage.id}
               onSelect={setSelectedImage}
               onClose={() => setSelectedImage(undefined)}

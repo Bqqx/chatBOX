@@ -44,7 +44,10 @@ async function request(req: NextRequest) {
   // alibaba use base url or just remove the path
   let path = `${req.nextUrl.pathname}`.replaceAll(ApiPath.SiliconFlow, "");
 
-  let baseUrl = serverConfig.siliconFlowUrl || SILICONFLOW_BASE_URL;
+  let baseUrl =
+    req.headers.get("x-base-url") ||
+    serverConfig.siliconFlowUrl ||
+    SILICONFLOW_BASE_URL;
 
   if (!baseUrl.startsWith("http")) {
     baseUrl = `https://${baseUrl}`;

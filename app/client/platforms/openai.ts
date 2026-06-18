@@ -13,7 +13,6 @@ import {
   useAccessStore,
   useAppConfig,
   useChatStore,
-  usePluginStore,
 } from "@/app/store";
 import { collectModelsWithDefaultModel } from "@/app/utils/model";
 import {
@@ -27,11 +26,13 @@ import { ModelSize, DalleQuality, DalleStyle } from "@/app/typing";
 
 import {
   ChatOptions,
+  getBearerToken,
   getHeaders,
   LLMApi,
   LLMModel,
   LLMUsage,
   MultimodalContent,
+  normalizeApiBaseUrl,
   resolveCustomOpenAIEndpoint,
 } from "../api";
 import Locale from "../../locales";
@@ -79,7 +80,7 @@ export interface DalleRequestPayload {
 }
 
 export class ChatGPTApi implements LLMApi {
-  private disableListModels = true;
+  private disableListModels = false;
 
   path(path: string): string {
     const accessStore = useAccessStore.getState();
@@ -227,7 +228,7 @@ export class ChatGPTApi implements LLMApi {
           messages.push({ role: v.role, content });
       }
 
-      // O1 not support image, tools (plugin in ChatGPTNextWeb) and system, stream, logprobs, temperature, top_p, n, presence_penalty, frequency_penalty yet.
+      // O1 does not support image, tools, system, stream, logprobs, temperature, top_p, n, presence_penalty, or frequency_penalty yet.
       const accessStore = useAccessStore.getState();
       const relayModel =
         accessStore.chatRelayEnabled &&
@@ -312,18 +313,12 @@ export class ChatGPTApi implements LLMApi {
       }
       if (shouldStream) {
         let index = -1;
-        const [tools, funcs] = usePluginStore
-          .getState()
-          .getAsTools(
-            useChatStore.getState().currentSession().mask?.plugin || [],
-          );
-        // console.log("getAsTools", tools, funcs);
         streamWithThink(
           chatPath,
           requestPayload,
           getHeaders(),
-          tools as any,
-          funcs,
+          [] as any,
+          {},
           controller,
           // parseSSE
           (text: string, runTools: ChatMessageTool[]) => {
@@ -506,16 +501,37 @@ export class ChatGPTApi implements LLMApi {
       return DEFAULT_MODELS.slice();
     }
 
+    const accessStore = useAccessStore.getState();
+    const clientConfig = getClientConfig();
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    };
+    const bearerToken = getBearerToken(accessStore.openaiApiKey);
+    if (bearerToken) {
+      headers.Authorization = bearerToken;
+    }
+    if (
+      !clientConfig?.isApp &&
+      accessStore.openaiUrl &&
+      normalizeApiBaseUrl(accessStore.openaiUrl).startsWith("http")
+    ) {
+      headers["x-base-url"] = normalizeApiBaseUrl(accessStore.openaiUrl);
+    }
+
     const res = await fetch(this.path(OpenaiPath.ListModelPath), {
       method: "GET",
-      headers: {
-        ...getHeaders(),
-      },
+      headers,
     });
 
     const resJson = (await res.json()) as OpenAIListModelResponse;
     const chatModels = resJson.data?.filter(
-      (m) => m.id.startsWith("gpt-") || m.id.startsWith("chatgpt-"),
+      (m) =>
+        m.id.startsWith("gpt-") ||
+        m.id.startsWith("chatgpt-") ||
+        m.id.startsWith("o1") ||
+        m.id.startsWith("o3") ||
+        m.id.startsWith("o4"),
     );
     console.log("[Models]", chatModels);
 
@@ -523,8 +539,7 @@ export class ChatGPTApi implements LLMApi {
       return [];
     }
 
-    //由于目前 OpenAI 的 disableListModels 默认为 true，所以当前实际不会运行到这场
-    let seq = 1000; //同 Constant.ts 中的排序保持一致
+    let seq = 1000;
     return chatModels.map((m) => ({
       name: m.id,
       available: true,

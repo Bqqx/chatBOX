@@ -1,24 +1,20 @@
 "use client";
 
-import {
-  ApiPath,
-  AI302_BASE_URL,
-  DEFAULT_MODELS,
-  AI302,
-} from "@/app/constant";
+import { ApiPath, AI302_BASE_URL, DEFAULT_MODELS, AI302 } from "@/app/constant";
 import {
   useAccessStore,
   useAppConfig,
   useChatStore,
   ChatMessageTool,
-  usePluginStore,
 } from "@/app/store";
 import { preProcessImageContent, streamWithThink } from "@/app/utils/chat";
 import {
   ChatOptions,
+  getBearerToken,
   getHeaders,
   LLMApi,
   LLMModel,
+  normalizeApiBaseUrl,
 } from "../api";
 import { getClientConfig } from "@/app/config/client";
 import {
@@ -46,13 +42,13 @@ export class Ai302Api implements LLMApi {
     const accessStore = useAccessStore.getState();
 
     let baseUrl = "";
+    const isApp = !!getClientConfig()?.isApp;
 
-    if (accessStore.useCustomConfig) {
+    if (accessStore.useCustomConfig && isApp) {
       baseUrl = accessStore.ai302Url;
     }
 
     if (baseUrl.length === 0) {
-      const isApp = !!getClientConfig()?.isApp;
       const apiPath = ApiPath["302.AI"];
       baseUrl = isApp ? AI302_BASE_URL : apiPath;
     }
@@ -60,10 +56,7 @@ export class Ai302Api implements LLMApi {
     if (baseUrl.endsWith("/")) {
       baseUrl = baseUrl.slice(0, baseUrl.length - 1);
     }
-    if (
-      !baseUrl.startsWith("http") &&
-      !baseUrl.startsWith(ApiPath["302.AI"])
-    ) {
+    if (!baseUrl.startsWith("http") && !baseUrl.startsWith(ApiPath["302.AI"])) {
       baseUrl = "https://" + baseUrl;
     }
 
@@ -136,17 +129,12 @@ export class Ai302Api implements LLMApi {
       );
 
       if (shouldStream) {
-        const [tools, funcs] = usePluginStore
-          .getState()
-          .getAsTools(
-            useChatStore.getState().currentSession().mask?.plugin || [],
-          );
         return streamWithThink(
           chatPath,
           requestPayload,
           getHeaders(),
-          tools as any,
-          funcs,
+          [] as any,
+          {},
           controller,
           // parseSSE
           (text: string, runTools: ChatMessageTool[]) => {
@@ -253,9 +241,7 @@ export class Ai302Api implements LLMApi {
 
     const res = await fetch(this.path(AI302.ListModelPath), {
       method: "GET",
-      headers: {
-        ...getHeaders(),
-      },
+      headers: this.modelListHeaders(),
     });
 
     const resJson = (await res.json()) as Ai302ListModelResponse;
@@ -266,7 +252,7 @@ export class Ai302Api implements LLMApi {
       return [];
     }
 
-    let seq = 1000; //同 Constant.ts 中的排序保持一致
+    let seq = 1000; //�?Constant.ts 中的排序保持一�?
     return chatModels.map((m) => ({
       name: m.id,
       available: true,
@@ -278,5 +264,26 @@ export class Ai302Api implements LLMApi {
         sorted: 15,
       },
     }));
+  }
+
+  private modelListHeaders(): Record<string, string> {
+    const accessStore = useAccessStore.getState();
+    const clientConfig = getClientConfig();
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    };
+    const bearerToken = getBearerToken(accessStore.ai302ApiKey);
+    if (bearerToken) {
+      headers.Authorization = bearerToken;
+    }
+    if (
+      !clientConfig?.isApp &&
+      accessStore.ai302Url &&
+      normalizeApiBaseUrl(accessStore.ai302Url).startsWith("http")
+    ) {
+      headers["x-base-url"] = normalizeApiBaseUrl(accessStore.ai302Url);
+    }
+    return headers;
   }
 }

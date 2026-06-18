@@ -11,14 +11,15 @@ import {
   useAppConfig,
   useChatStore,
   ChatMessageTool,
-  usePluginStore,
 } from "@/app/store";
 import { preProcessImageContent, streamWithThink } from "@/app/utils/chat";
 import {
   ChatOptions,
+  getBearerToken,
   getHeaders,
   LLMApi,
   LLMModel,
+  normalizeApiBaseUrl,
 } from "../api";
 import { getClientConfig } from "@/app/config/client";
 import {
@@ -46,13 +47,13 @@ export class SiliconflowApi implements LLMApi {
     const accessStore = useAccessStore.getState();
 
     let baseUrl = "";
+    const isApp = !!getClientConfig()?.isApp;
 
-    if (accessStore.useCustomConfig) {
+    if (accessStore.useCustomConfig && isApp) {
       baseUrl = accessStore.siliconflowUrl;
     }
 
     if (baseUrl.length === 0) {
-      const isApp = !!getClientConfig()?.isApp;
       const apiPath = ApiPath.SiliconFlow;
       baseUrl = isApp ? SILICONFLOW_BASE_URL : apiPath;
     }
@@ -136,17 +137,12 @@ export class SiliconflowApi implements LLMApi {
       );
 
       if (shouldStream) {
-        const [tools, funcs] = usePluginStore
-          .getState()
-          .getAsTools(
-            useChatStore.getState().currentSession().mask?.plugin || [],
-          );
         return streamWithThink(
           chatPath,
           requestPayload,
           getHeaders(),
-          tools as any,
-          funcs,
+          [] as any,
+          {},
           controller,
           // parseSSE
           (text: string, runTools: ChatMessageTool[]) => {
@@ -253,9 +249,7 @@ export class SiliconflowApi implements LLMApi {
 
     const res = await fetch(this.path(SiliconFlow.ListModelPath), {
       method: "GET",
-      headers: {
-        ...getHeaders(),
-      },
+      headers: this.modelListHeaders(),
     });
 
     const resJson = (await res.json()) as SiliconFlowListModelResponse;
@@ -266,7 +260,7 @@ export class SiliconflowApi implements LLMApi {
       return [];
     }
 
-    let seq = 1000; //同 Constant.ts 中的排序保持一致
+    let seq = 1000; //�?Constant.ts 中的排序保持一�?
     return chatModels.map((m) => ({
       name: m.id,
       available: true,
@@ -278,5 +272,26 @@ export class SiliconflowApi implements LLMApi {
         sorted: 14,
       },
     }));
+  }
+
+  private modelListHeaders(): Record<string, string> {
+    const accessStore = useAccessStore.getState();
+    const clientConfig = getClientConfig();
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    };
+    const bearerToken = getBearerToken(accessStore.siliconflowApiKey);
+    if (bearerToken) {
+      headers.Authorization = bearerToken;
+    }
+    if (
+      !clientConfig?.isApp &&
+      accessStore.siliconflowUrl &&
+      normalizeApiBaseUrl(accessStore.siliconflowUrl).startsWith("http")
+    ) {
+      headers["x-base-url"] = normalizeApiBaseUrl(accessStore.siliconflowUrl);
+    }
+    return headers;
   }
 }

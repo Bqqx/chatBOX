@@ -12,7 +12,11 @@ import { auth } from "./auth";
 import { isModelNotavailableInServer } from "@/app/utils/model";
 import { cloudflareAIGatewayUrl } from "@/app/utils/cloudflare";
 
-const ALLOWD_PATH = new Set([Anthropic.ChatPath, Anthropic.ChatPath1]);
+const ALLOWD_PATH = new Set([
+  Anthropic.ChatPath,
+  Anthropic.ChatPath1,
+  Anthropic.ListModelPath,
+]);
 
 export async function handle(
   req: NextRequest,
@@ -70,7 +74,10 @@ async function request(req: NextRequest) {
   let path = `${req.nextUrl.pathname}`.replaceAll(ApiPath.Anthropic, "");
 
   let baseUrl =
-    serverConfig.anthropicUrl || serverConfig.baseUrl || ANTHROPIC_BASE_URL;
+    req.headers.get("x-base-url") ||
+    serverConfig.anthropicUrl ||
+    serverConfig.baseUrl ||
+    ANTHROPIC_BASE_URL;
 
   if (!baseUrl.startsWith("http")) {
     baseUrl = `https://${baseUrl}`;

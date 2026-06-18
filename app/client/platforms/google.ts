@@ -5,12 +5,12 @@ import {
   LLMApi,
   LLMModel,
   LLMUsage,
+  normalizeApiBaseUrl,
 } from "../api";
 import {
   useAccessStore,
   useAppConfig,
   useChatStore,
-  usePluginStore,
   ChatMessageTool,
 } from "@/app/store";
 import { stream } from "@/app/utils/chat";
@@ -33,11 +33,11 @@ export class GeminiProApi implements LLMApi {
     const accessStore = useAccessStore.getState();
 
     let baseUrl = "";
-    if (accessStore.useCustomConfig) {
+    const isApp = !!getClientConfig()?.isApp;
+    if (accessStore.useCustomConfig && isApp) {
       baseUrl = accessStore.googleUrl;
     }
 
-    const isApp = !!getClientConfig()?.isApp;
     if (baseUrl.length === 0) {
       baseUrl = isApp ? GEMINI_BASE_URL : ApiPath.Google;
     }
@@ -201,21 +201,12 @@ export class GeminiProApi implements LLMApi {
       );
 
       if (shouldStream) {
-        const [tools, funcs] = usePluginStore
-          .getState()
-          .getAsTools(
-            useChatStore.getState().currentSession().mask?.plugin || [],
-          );
         return stream(
           chatPath,
           requestPayload,
           getHeaders(),
-          // @ts-ignore
-          tools.length > 0
-            ? // @ts-ignore
-              [{ functionDeclarations: tools.map((tool) => tool.function) }]
-            : [],
-          funcs,
+          [],
+          {},
           controller,
           // parseSSE
           (text: string, runTools: ChatMessageTool[]) => {
@@ -307,6 +298,63 @@ export class GeminiProApi implements LLMApi {
     throw new Error("Method not implemented.");
   }
   async models(): Promise<LLMModel[]> {
-    return [];
+    const accessStore = useAccessStore.getState();
+    const clientConfig = getClientConfig();
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    };
+    if (accessStore.googleApiKey) {
+      headers["x-goog-api-key"] = accessStore.googleApiKey.trim();
+    }
+
+    if (
+      !clientConfig?.isApp &&
+      accessStore.googleUrl &&
+      normalizeApiBaseUrl(accessStore.googleUrl).startsWith("http")
+    ) {
+      headers["x-base-url"] = normalizeApiBaseUrl(accessStore.googleUrl);
+    }
+
+    const res = await fetch(this.path(Google.ListModelPath), {
+      method: "GET",
+      headers,
+    });
+
+    if (!res.ok) {
+      return [];
+    }
+
+    const resJson = (await res.json()) as {
+      models?: Array<{
+        name: string;
+        supportedGenerationMethods?: string[];
+      }>;
+    };
+    const chatModels = resJson.models?.filter(
+      (m) =>
+        !!m.name && m.supportedGenerationMethods?.includes("generateContent"),
+    );
+
+    if (!chatModels?.length) {
+      return [];
+    }
+
+    let seq = 1000;
+    return chatModels.map((m) => {
+      const name = m.name.replace(/^models\//, "");
+      return {
+        name,
+        displayName: name,
+        available: true,
+        sorted: seq++,
+        provider: {
+          id: "google",
+          providerName: "Google",
+          providerType: "google",
+          sorted: 3,
+        },
+      };
+    });
   }
 }

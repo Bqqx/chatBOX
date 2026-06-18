@@ -178,6 +178,7 @@ function ResourcePanelItem(props: {
   selected: boolean;
   onClick: () => void;
   narrow?: boolean;
+  narrowLabel?: string;
 }) {
   if (props.narrow) {
     return (
@@ -188,7 +189,8 @@ function ResourcePanelItem(props: {
         onClick={props.onClick}
         title={`${props.title}\n${props.count} 张图片`}
       >
-        {props.count}
+        {props.narrowLabel ??
+          Array.from(props.title.trim()).slice(0, 2).join("")}
       </div>
     );
   }
@@ -235,6 +237,8 @@ function ResourcePanel(props: { narrow?: boolean }) {
   const goTo = (search: string) => {
     navigate(`${Path.Resources}${search}`);
   };
+  const getNarrowLabel = (title: string) =>
+    Array.from(title.trim()).slice(0, 2).join("");
 
   return (
     <div className={styles["resource-panel"]}>
@@ -244,6 +248,7 @@ function ResourcePanel(props: { narrow?: boolean }) {
         selected={!sessionId && activeTime === "all"}
         onClick={() => goTo("")}
         narrow={props.narrow}
+        narrowLabel="全部"
       />
       <ResourcePanelItem
         title="今天"
@@ -251,6 +256,7 @@ function ResourcePanel(props: { narrow?: boolean }) {
         selected={!sessionId && activeTime === "today"}
         onClick={() => goTo("?time=today")}
         narrow={props.narrow}
+        narrowLabel="今天"
       />
       <ResourcePanelItem
         title="本周"
@@ -258,6 +264,7 @@ function ResourcePanel(props: { narrow?: boolean }) {
         selected={!sessionId && activeTime === "week"}
         onClick={() => goTo("?time=week")}
         narrow={props.narrow}
+        narrowLabel="本周"
       />
 
       {sessionsWithImages.length > 0 && !props.narrow && (
@@ -271,6 +278,7 @@ function ResourcePanel(props: { narrow?: boolean }) {
           selected={sessionId === session.id}
           onClick={() => goTo(`?session=${encodeURIComponent(session.id)}`)}
           narrow={props.narrow}
+          narrowLabel={getNarrowLabel(session.topic)}
         />
       ))}
     </div>

@@ -11,14 +11,15 @@ import {
   useAppConfig,
   useChatStore,
   ChatMessageTool,
-  usePluginStore,
 } from "@/app/store";
 import { stream } from "@/app/utils/chat";
 import {
   ChatOptions,
+  getBearerToken,
   getHeaders,
   LLMApi,
   LLMModel,
+  normalizeApiBaseUrl,
 } from "../api";
 import { getClientConfig } from "@/app/config/client";
 import { getMessageTextContent } from "@/app/utils";
@@ -26,19 +27,19 @@ import { RequestPayload } from "./openai";
 import { fetch } from "@/app/utils/stream";
 
 export class MoonshotApi implements LLMApi {
-  private disableListModels = true;
+  private disableListModels = false;
 
   path(path: string): string {
     const accessStore = useAccessStore.getState();
 
     let baseUrl = "";
+    const isApp = !!getClientConfig()?.isApp;
 
-    if (accessStore.useCustomConfig) {
+    if (accessStore.useCustomConfig && isApp) {
       baseUrl = accessStore.moonshotUrl;
     }
 
     if (baseUrl.length === 0) {
-      const isApp = !!getClientConfig()?.isApp;
       const apiPath = ApiPath.Moonshot;
       baseUrl = isApp ? MOONSHOT_BASE_URL : apiPath;
     }
@@ -109,17 +110,12 @@ export class MoonshotApi implements LLMApi {
       );
 
       if (shouldStream) {
-        const [tools, funcs] = usePluginStore
-          .getState()
-          .getAsTools(
-            useChatStore.getState().currentSession().mask?.plugin || [],
-          );
         return stream(
           chatPath,
           requestPayload,
           getHeaders(),
-          tools as any,
-          funcs,
+          [] as any,
+          {},
           controller,
           // parseSSE
           (text: string, runTools: ChatMessageTool[]) => {
@@ -190,6 +186,58 @@ export class MoonshotApi implements LLMApi {
   }
 
   async models(): Promise<LLMModel[]> {
-    return [];
+    if (this.disableListModels) {
+      return [];
+    }
+
+    const accessStore = useAccessStore.getState();
+    const clientConfig = getClientConfig();
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    };
+    const bearerToken = getBearerToken(accessStore.moonshotApiKey);
+    if (bearerToken) {
+      headers.Authorization = bearerToken;
+    }
+    if (
+      !clientConfig?.isApp &&
+      accessStore.moonshotUrl &&
+      normalizeApiBaseUrl(accessStore.moonshotUrl).startsWith("http")
+    ) {
+      headers["x-base-url"] = normalizeApiBaseUrl(accessStore.moonshotUrl);
+    }
+
+    const res = await fetch(this.path(Moonshot.ListModelPath), {
+      method: "GET",
+      headers,
+    });
+
+    if (!res.ok) {
+      return [];
+    }
+
+    const resJson = (await res.json()) as {
+      data?: Array<{ id: string }>;
+    };
+    const chatModels = resJson.data?.filter((m) => !!m.id);
+
+    if (!chatModels?.length) {
+      return [];
+    }
+
+    let seq = 1000;
+    return chatModels.map((m) => ({
+      name: m.id,
+      displayName: m.id,
+      available: true,
+      sorted: seq++,
+      provider: {
+        id: "moonshot",
+        providerName: "Moonshot",
+        providerType: "moonshot",
+        sorted: 9,
+      },
+    }));
   }
 }

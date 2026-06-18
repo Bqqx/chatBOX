@@ -30,6 +30,10 @@ import {
 } from "../constant";
 import Locale, { getLang } from "../locales";
 import { prettyObject } from "../utils/format";
+import {
+  ensureCompletionNotificationPermission,
+  notifyCompletionWhenBackground,
+} from "../utils/native-notifications";
 import { createPersistStore } from "../utils/store";
 import { estimateTokenLength } from "../utils/token";
 import { ModelConfig, ModelType, useAppConfig } from "./config";
@@ -490,6 +494,7 @@ export const useChatStore = createPersistStore(
 
         const api: ClientApi = getClientApi(requestModelConfig.providerName);
         // make request
+        void ensureCompletionNotificationPermission();
         api.llm.chat({
           messages: sendMessages,
           config: { ...requestModelConfig, stream: true },
@@ -508,6 +513,7 @@ export const useChatStore = createPersistStore(
               botMessage.content = message;
               botMessage.date = new Date().toLocaleString();
               get().onNewMessage(botMessage, session);
+              void notifyCompletionWhenBackground();
             }
             ChatControllerPool.remove(session.id, botMessage.id);
           },
@@ -545,6 +551,7 @@ export const useChatStore = createPersistStore(
               session.id,
               botMessage.id ?? messageIndex,
             );
+            void notifyCompletionWhenBackground();
 
             console.error("[Chat] failed ", error);
           },

@@ -1,7 +1,6 @@
 export const OWNER = "ChatGPTNextWeb";
 export const REPO = "ChatGPT-Next-Web";
 export const REPO_URL = `https://github.com/${OWNER}/${REPO}`;
-export const PLUGINS_REPO_URL = `https://github.com/${OWNER}/NextChat-Awesome-Plugins`;
 export const ISSUE_URL = `https://github.com/${OWNER}/${REPO}/issues`;
 export const UPDATE_URL = `${REPO_URL}#keep-updated`;
 export const RELEASE_URL = `${REPO_URL}/releases`;
@@ -48,7 +47,6 @@ export enum Path {
   NewChat = "/new-chat",
   Masks = "/masks",
   Resources = "/resources",
-  Plugins = "/plugins",
   Auth = "/auth",
   Sd = "/sd",
   SdNew = "/sd-new",
@@ -91,7 +89,6 @@ export enum FileName {
 export enum StoreKey {
   Chat = "chat-next-web-store",
   ImageChat = "image-chat-store",
-  Plugin = "chat-next-web-plugin",
   Access = "access-control",
   Config = "app-config",
   Mask = "mask-store",
@@ -174,6 +171,7 @@ export const Stability = {
 export const Anthropic = {
   ChatPath: "v1/messages",
   ChatPath1: "v1/complete",
+  ListModelPath: "v1/models",
   ExampleEndpoint: "https://api.anthropic.com",
   Vision: "2023-06-01",
 };
@@ -197,6 +195,7 @@ export const Azure = {
 
 export const Google = {
   ExampleEndpoint: "https://generativelanguage.googleapis.com/",
+  ListModelPath: "v1beta/models",
   ChatPath: (modelName: string) =>
     `v1beta/models/${modelName}:streamGenerateContent`,
 };
@@ -243,6 +242,7 @@ export const Tencent = {
 export const Moonshot = {
   ExampleEndpoint: MOONSHOT_BASE_URL,
   ChatPath: "v1/chat/completions",
+  ListModelPath: "v1/models",
 };
 
 export const Iflytek = {
@@ -252,12 +252,14 @@ export const Iflytek = {
 
 export const DeepSeek = {
   ExampleEndpoint: DEEPSEEK_BASE_URL,
-  ChatPath: "chat/completions",
+  ChatPath: "v1/chat/completions",
+  ListModelPath: "models",
 };
 
 export const XAI = {
   ExampleEndpoint: XAI_BASE_URL,
   ChatPath: "v1/chat/completions",
+  ListModelPath: "v1/models",
 };
 
 export const ChatGLM = {
@@ -481,7 +483,7 @@ export const VISION_MODEL_REGEXES = [
   /o3/,
   /o4-mini/,
   /grok-4/i,
-  /gpt-5/
+  /gpt-5/,
 ];
 
 export const EXCLUDE_VISION_MODEL_REGEXES = [/claude-3-5-haiku-20241022/];
@@ -549,7 +551,7 @@ const googleModels = [
   "gemini-2.0-pro-exp",
   "gemini-2.0-pro-exp-02-05",
   "gemini-2.5-pro-preview-06-05",
-  "gemini-2.5-pro"
+  "gemini-2.5-pro",
 ];
 
 const anthropicModels = [

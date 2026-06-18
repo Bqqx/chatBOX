@@ -6,14 +6,14 @@ import RehypeKatex from "rehype-katex";
 import RemarkGfm from "remark-gfm";
 import RehypeHighlight from "rehype-highlight";
 import { useRef, useState, RefObject, useEffect, useMemo } from "react";
-import { copyToClipboard, useWindowSize } from "../utils";
+import { copyToClipboard } from "../utils";
 import mermaid from "mermaid";
 import Locale from "../locales";
 import LoadingIcon from "../icons/three-dots.svg";
 import ReloadButtonIcon from "../icons/reload.svg";
 import React from "react";
 import { useDebouncedCallback } from "use-debounce";
-import { showImageModal, FullScreen } from "./ui-lib";
+import { showImageModal } from "./ui-lib";
 import {
   ArtifactsShareButton,
   HTMLPreview,
@@ -76,7 +76,6 @@ export function PreCode(props: { children: any }) {
   const previewRef = useRef<HTMLPreviewHandler>(null);
   const [mermaidCode, setMermaidCode] = useState("");
   const [htmlCode, setHtmlCode] = useState("");
-  const { height } = useWindowSize();
   const chatStore = useChatStore();
   const session = chatStore.currentSession();
 
@@ -149,7 +148,7 @@ export function PreCode(props: { children: any }) {
         <Mermaid code={mermaidCode} key={mermaidCode} />
       )}
       {htmlCode.length > 0 && enableArtifacts && (
-        <FullScreen className="no-dark html" right={70}>
+        <div className="no-dark html" style={{ position: "relative" }}>
           <ArtifactsShareButton
             style={{ position: "absolute", right: 20, top: 10 }}
             getCode={() => htmlCode}
@@ -164,10 +163,10 @@ export function PreCode(props: { children: any }) {
           <HTMLPreview
             ref={previewRef}
             code={htmlCode}
-            autoHeight={!document.fullscreenElement}
-            height={!document.fullscreenElement ? 600 : height}
+            autoHeight
+            height={600}
           />
-        </FullScreen>
+        </div>
       )}
     </>
   );

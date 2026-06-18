@@ -25,6 +25,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 nextchat-dev*.log
+next-dev.log
 debug-*.png
 fixed-*.png
 nextchat-*.png
@@ -39,6 +40,9 @@ nextchat-*.png
 *.tsbuildinfo
 next-env.d.ts
 dev
+dist-apk/
+start-dev.bat
+start-dev.ps1
 
 .vscode
 .idea

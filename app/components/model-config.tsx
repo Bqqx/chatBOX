@@ -3,23 +3,35 @@ import { ModalConfigValidator, ModelConfig } from "../store";
 
 import Locale from "../locales";
 import { InputRange } from "./input-range";
-import { ListItem, Select } from "./ui-lib";
-import { useAllModels } from "../utils/hooks";
-import { groupBy } from "lodash-es";
+import { ListItem, Select, showToast } from "./ui-lib";
+import { useAllModels, useRefreshProviderModels } from "../utils/hooks";
 import styles from "./model-config.module.scss";
 import { getModelProvider } from "../utils/model";
 
 export function ModelConfigList(props: {
   modelConfig: ModelConfig;
+  providerName?: ServiceProvider;
   updateConfig: (updater: (config: ModelConfig) => void) => void;
 }) {
+  const providerName = props.providerName ?? props.modelConfig.providerName;
+  const { loading: loadingModels, refresh: refreshModels } =
+    useRefreshProviderModels(providerName);
   const allModels = useAllModels();
-  const groupModels = groupBy(
-    allModels.filter((v) => v.available),
-    "provider.providerName",
+  const providerModels = allModels.filter(
+    (v) => v.available && v.provider?.providerName === providerName,
   );
-  const value = `${props.modelConfig.model}@${props.modelConfig?.providerName}`;
+  const value = `${props.modelConfig.model}@${providerName}`;
   const compressModelValue = `${props.modelConfig.compressModel}@${props.modelConfig?.compressProviderName}`;
+  const refreshModelOptions = async () => {
+    const models = await refreshModels();
+    if (!models) return;
+
+    if (models.length > 0) {
+      showToast("已获取最新模型列表", undefined, 2800, "success");
+    } else {
+      showToast("未获取到最新模型列表，请手动填写", undefined, 4200, "warning");
+    }
+  };
 
   return (
     <>
@@ -28,6 +40,7 @@ export function ModelConfigList(props: {
           aria-label={Locale.Settings.Model}
           value={value}
           align="left"
+          onPointerDown={refreshModelOptions}
           onChange={(e) => {
             const [model, providerName] = getModelProvider(
               e.currentTarget.value,
@@ -38,14 +51,15 @@ export function ModelConfigList(props: {
             });
           }}
         >
-          {Object.keys(groupModels).map((providerName, index) => (
-            <optgroup label={providerName} key={index}>
-              {groupModels[providerName].map((v, i) => (
-                <option value={`${v.name}@${v.provider?.providerName}`} key={i}>
-                  {v.displayName}
-                </option>
-              ))}
-            </optgroup>
+          {loadingModels && (
+            <option value={value} disabled>
+              正在获取模型...
+            </option>
+          )}
+          {providerModels.map((v, i) => (
+            <option value={`${v.name}@${v.provider?.providerName}`} key={i}>
+              {v.displayName || v.name}
+            </option>
           ))}
         </Select>
       </ListItem>

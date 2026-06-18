@@ -6,17 +6,13 @@ import { IconButton } from "@/app/components/button";
 import ReturnIcon from "@/app/icons/return.svg";
 import Locale from "@/app/locales";
 import { Path } from "@/app/constant";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   copyToClipboard,
   getMessageTextContent,
   useMobileScreen,
 } from "@/app/utils";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useAppConfig } from "@/app/store";
-import MinIcon from "@/app/icons/min.svg";
-import MaxIcon from "@/app/icons/max.svg";
-import { getClientConfig } from "@/app/config/client";
 import { ChatAction } from "@/app/components/chat";
 import DeleteIcon from "@/app/icons/clear.svg";
 import CopyIcon from "@/app/icons/copy.svg";
@@ -91,9 +87,6 @@ export function Sd() {
   const isMobileScreen = useMobileScreen();
   const navigate = useNavigate();
   const location = useLocation();
-  const clientConfig = useMemo(() => getClientConfig(), []);
-  const showMaxIcon = !isMobileScreen && !clientConfig?.isApp;
-  const config = useAppConfig();
   const scrollRef = useRef<HTMLDivElement>(null);
   const sdStore = useSdStore();
   const [sdImages, setSdImages] = useState(sdStore.draw);
@@ -134,20 +127,6 @@ export function Sd() {
             </div>
 
             <div className="window-actions">
-              {showMaxIcon && (
-                <div className="window-action-button">
-                  <IconButton
-                    aria={Locale.Chat.Actions.FullScreen}
-                    icon={config.tightBorder ? <MinIcon /> : <MaxIcon />}
-                    bordered
-                    onClick={() => {
-                      config.update(
-                        (config) => (config.tightBorder = !config.tightBorder),
-                      );
-                    }}
-                  />
-                </div>
-              )}
               {isMobileScreen && <SDIcon width={50} height={50} />}
             </div>
           </div>
