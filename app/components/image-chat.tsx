@@ -134,8 +134,16 @@ function normalizeGeminiModel(model: string) {
   return name;
 }
 
+function cleanImageRelayUrlInput(baseUrl: string) {
+  return baseUrl
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/\s+/g, "")
+    .replace(/^[`"']+|[`"']+$/g, "")
+    .replace(/\/+$/, "");
+}
+
 function normalizeImageRelayBaseUrl(baseUrl: string) {
-  let url = baseUrl.trim().replace(/\/+$/, "");
+  let url = cleanImageRelayUrlInput(baseUrl);
 
   if (url.startsWith("//")) {
     return `http:${url}`;
@@ -316,14 +324,60 @@ function buildOpenAIImagePayload(
 ) {
   const imageSize = ratio ? ratioToOpenAIImageSize(ratio) : undefined;
   return {
+    model,
     prompt,
     ...(imageSize ? { size: imageSize } : {}),
     n: count,
-    model,
     ...(sourceImages.length > 0
       ? { image: sourceImages.length === 1 ? sourceImages[0] : sourceImages }
       : {}),
   };
+}
+
+function summarizeImagePayloadForLog(image: unknown) {
+  const images = Array.isArray(image) ? image : image ? [image] : [];
+
+  return {
+    imageCount: images.length,
+    imageShape: Array.isArray(image) ? "array" : image ? "single" : "none",
+    images: images.map((item) => {
+      if (typeof item !== "string") {
+        return { type: typeof item };
+      }
+
+      const mimeMatch = item.match(/^data:([^;]+);base64,/);
+      return {
+        type: "data-url",
+        mime: mimeMatch?.[1] ?? "",
+        length: item.length,
+      };
+    }),
+  };
+}
+
+function logOpenAIImageRequestForDebug(
+  requestUrl: string,
+  baseUrl: string,
+  payload: ReturnType<typeof buildOpenAIImagePayload>,
+  image?: unknown,
+) {
+  if (process.env.NODE_ENV === "production") return;
+
+  const { prompt, ...safePayload } = payload;
+  const imageCount = Array.isArray(image) ? image.length : image ? 1 : 0;
+  console.info(
+    "[ChatBox][GPT image request]",
+    JSON.stringify({
+      requestUrl,
+      baseUrl,
+      payload: {
+        ...safePayload,
+        promptLength: prompt.length,
+        hasImage: imageCount > 0,
+        ...summarizeImagePayloadForLog(image),
+      },
+    }),
+  );
 }
 
 function buildNanoBananaPayload(
@@ -644,6 +698,7 @@ function collectImageUrlsFromObject(input: any): string[] {
     if (typeof value === "object") {
       if (value.url) urls.push(value.url);
       if (value.image) urls.push(value.image);
+      if (value.result) urls.push(value.result);
       if (value.b64_json) urls.push(buildDataImageUrl(value.b64_json));
       if (
         value.inlineData?.data &&
@@ -864,6 +919,21 @@ async function readResponseJson(response: Response) {
   const text = await response.text();
   if (!text) return {};
 
+  const contentType = response.headers.get("content-type") ?? "";
+  if (
+    contentType.includes("text/html") ||
+    /^\s*<!doctype\s+html/i.test(text) ||
+    /^\s*<html[\s>]/i.test(text)
+  ) {
+    return {
+      message:
+        "请求没有到达生图接口，返回了网页 HTML。请检查接口地址是否为中转站根地址，并刷新页面后重试。",
+      htmlResponse: true,
+      status: response.status,
+      url: response.url,
+    };
+  }
+
   try {
     return JSON.parse(text);
   } catch {
@@ -875,6 +945,7 @@ async function postJsonWithRetry(
   requestUrl: string,
   headers: Record<string, string>,
   payload: unknown,
+  options: { maxAttempts?: number } = {},
 ) {
   const requestOptions = {
     method: "POST",
@@ -882,13 +953,18 @@ async function postJsonWithRetry(
     body: JSON.stringify(payload),
   };
 
+  const maxAttempts = options.maxAttempts ?? 2;
   let json: any = {};
   let response: Response | undefined;
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     response = await fetchWithTimeout(requestUrl, requestOptions);
     json = await readResponseJson(response);
 
-    if (!response.ok && RETRYABLE_STATUS.has(response.status) && attempt < 2) {
+    if (
+      !response.ok &&
+      RETRYABLE_STATUS.has(response.status) &&
+      attempt < maxAttempts
+    ) {
       await sleep(1200);
       continue;
     }
@@ -1063,6 +1139,19 @@ export function ImageChat() {
       }
     });
   }, [accessStore, engine, model]);
+
+  useEffect(() => {
+    const storedModel = getStoredImageModel(accessStore, engine);
+    if (storedModel !== model) {
+      setModel(storedModel);
+    }
+  }, [
+    accessStore,
+    accessStore.imageChatGPTModel,
+    accessStore.imageNanoModel,
+    engine,
+    model,
+  ]);
 
   function updateEngine(nextEngine: ImageEngine) {
     const nextModel = getStoredImageModel(accessStore, nextEngine);
@@ -1323,12 +1412,12 @@ export function ImageChat() {
 
     try {
       const baseUrl = normalizeImageRelayBaseUrl(accessStore.imageUrl);
-      const headers: Record<string, string> = {
+      const jsonHeaders: Record<string, string> = {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessStore.imageApiKey.trim()}`,
       };
       if (!getClientConfig()?.isApp && baseUrl.startsWith("http")) {
-        headers["x-base-url"] = baseUrl;
+        jsonHeaders["x-base-url"] = baseUrl;
       }
 
       const targetCount = clampImageCount(count);
@@ -1336,17 +1425,24 @@ export function ImageChat() {
       const errors: string[] = [];
 
       if (activeEngine === "ChatGPT") {
-        const json = await postJsonWithRetry(
-          buildOpenAIImageEndpoint(accessStore.imageUrl),
-          headers,
-          buildOpenAIImagePayload(
-            activeModel,
-            text,
-            size,
-            targetCount,
-            sourceImages,
-          ),
+        const requestUrl = buildOpenAIImageEndpoint(accessStore.imageUrl);
+        const payload = buildOpenAIImagePayload(
+          activeModel,
+          text,
+          size,
+          targetCount,
+          sourceImages,
         );
+        logOpenAIImageRequestForDebug(
+          requestUrl,
+          baseUrl,
+          payload,
+          sourceImages,
+        );
+
+        const json = await postJsonWithRetry(requestUrl, jsonHeaders, payload, {
+          maxAttempts: 1,
+        });
         const batchImages = extractImageUrls(json);
         const assistantText = extractAssistantText(json);
         if (batchImages.length === 0) {
@@ -1388,7 +1484,7 @@ export function ImageChat() {
         try {
           const json = await postJsonWithRetry(
             requestUrl,
-            headers,
+            jsonHeaders,
             buildNanoBananaPayload(text, size, sourceImages),
           );
 

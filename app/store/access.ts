@@ -174,6 +174,14 @@ const DEFAULT_ACCESS_STATE = {
   edgeTTSVoiceName: "zh-CN-YunxiNeural",
 };
 
+function cleanImageRelayUrlInput(url?: string) {
+  return (url ?? "")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/\s+/g, "")
+    .replace(/^[`"']+|[`"']+$/g, "")
+    .replace(/\/+$/, "");
+}
+
 export const useAccessStore = createPersistStore(
   { ...DEFAULT_ACCESS_STATE },
 
@@ -324,7 +332,7 @@ export const useAccessStore = createPersistStore(
   }),
   {
     name: StoreKey.Access,
-    version: 4,
+    version: 5,
     migrate(persistedState, version) {
       if (version < 2) {
         const state = persistedState as {
@@ -351,6 +359,7 @@ export const useAccessStore = createPersistStore(
         imageChatGPTModel?: string;
         imageChatGPTModels?: string[];
         imageUseCustomConfig?: boolean;
+        imageUrl?: string;
       };
 
       if (state.provider === ServiceProvider.Custom) {
@@ -369,6 +378,7 @@ export const useAccessStore = createPersistStore(
       }
 
       state.imageUseCustomConfig = true;
+      state.imageUrl = cleanImageRelayUrlInput(state.imageUrl);
       const normalizeNanoModel = (model: string) =>
         model === "[Rim] gemini-3-pro-image-preview"
           ? "「Rim」gemini-3-pro-image-preview"

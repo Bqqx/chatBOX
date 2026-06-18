@@ -20,6 +20,17 @@ export async function handle(
   const fetchUrl = `${req.headers.get(
     "x-base-url",
   )}/${subpath}?${req.nextUrl.searchParams.toString()}`;
+  const shouldLogImageProxy =
+    process.env.NODE_ENV !== "production" &&
+    (subpath.startsWith("v1/images/") || subpath === "v1/chat/completions");
+  const startedAt = Date.now();
+  if (shouldLogImageProxy) {
+    console.log("[Image Proxy] request", {
+      method: req.method,
+      fetchUrl,
+      subpath,
+    });
+  }
   const skipHeaders = ["connection", "host", "origin", "referer", "cookie"];
   const headers = new Headers(
     Array.from(req.headers.entries()).filter((item) => {
@@ -34,16 +45,16 @@ export async function handle(
     }),
   );
   // if dalle3 use openai api key
-    const baseUrl = req.headers.get("x-base-url");
-    if (baseUrl?.includes("api.openai.com")) {
-      if (!serverConfig.apiKey) {
-        return NextResponse.json(
-          { error: "OpenAI API key not configured" },
-          { status: 500 },
-        );
-      }
-      headers.set("Authorization", `Bearer ${serverConfig.apiKey}`);
+  const baseUrl = req.headers.get("x-base-url");
+  if (baseUrl?.includes("api.openai.com")) {
+    if (!serverConfig.apiKey) {
+      return NextResponse.json(
+        { error: "OpenAI API key not configured" },
+        { status: 500 },
+      );
     }
+    headers.set("Authorization", `Bearer ${serverConfig.apiKey}`);
+  }
 
   const controller = new AbortController();
   const fetchOptions: RequestInit = {
@@ -66,6 +77,23 @@ export async function handle(
 
   try {
     const res = await fetch(fetchUrl, fetchOptions);
+    if (shouldLogImageProxy) {
+      let errorBody = "";
+      if (!res.ok) {
+        try {
+          errorBody = (await res.clone().text()).slice(0, 800);
+        } catch {
+          errorBody = "";
+        }
+      }
+
+      console.log("[Image Proxy] response", {
+        status: res.status,
+        statusText: res.statusText,
+        elapsedMs: Date.now() - startedAt,
+        ...(errorBody ? { errorBody } : {}),
+      });
+    }
     // to prevent browser prompt for credentials
     const newHeaders = new Headers(res.headers);
     newHeaders.delete("www-authenticate");

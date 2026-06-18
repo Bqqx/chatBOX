@@ -12,7 +12,6 @@ import EditIcon from "../icons/edit.svg";
 import EyeIcon from "../icons/eye.svg";
 import DownloadIcon from "../icons/download.svg";
 import UploadIcon from "../icons/upload.svg";
-import ConfigIcon from "../icons/config.svg";
 import ConfirmIcon from "../icons/confirm.svg";
 
 import ConnectionIcon from "../icons/connection.svg";
@@ -26,7 +25,6 @@ import {
   PasswordInput,
   Select,
   showConfirm,
-  showToast,
 } from "./ui-lib";
 import { ModelConfigList } from "./model-config";
 
@@ -83,10 +81,16 @@ import { ProviderType } from "../utils/cloud";
 const IMAGE_ENGINE_OPTIONS = ["Nanobanana", "ChatGPT"] as const;
 type ImageEngine = (typeof IMAGE_ENGINE_OPTIONS)[number];
 
-function getDefaultImageModel(engine: ImageEngine) {
-  return engine === "Nanobanana"
-    ? "「Rim」gemini-3-pro-image-preview"
-    : "gpt-image-2";
+function cleanImageRelayUrlInput(url: string) {
+  return url
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/\s+/g, "")
+    .replace(/^[`"']+|[`"']+$/g, "")
+    .replace(/\/+$/, "");
+}
+
+function getDefaultImageModel(_engine: ImageEngine) {
+  return "";
 }
 
 function EditPromptModal(props: { id: string; onClose: () => void }) {
@@ -1814,25 +1818,6 @@ export function Settings() {
             </ListItem>
           ) : null}
 
-          <ListItem
-            title={Locale.Settings.Access.CustomModel.Title}
-            subTitle={Locale.Settings.Access.CustomModel.SubTitle}
-            vertical={true}
-          >
-            <input
-              aria-label={Locale.Settings.Access.CustomModel.Title}
-              style={{ width: "100%", maxWidth: "unset", textAlign: "left" }}
-              type="text"
-              value={config.customModels}
-              placeholder="model1,model2,model3"
-              onChange={(e) =>
-                config.update(
-                  (config) => (config.customModels = e.currentTarget.value),
-                )
-              }
-            ></input>
-          </ListItem>
-
           <ModelConfigList
             modelConfig={config.modelConfig}
             providerName={accessStore.provider}
@@ -1856,7 +1841,10 @@ export function Settings() {
               placeholder=""
               onChange={(e) =>
                 accessStore.update(
-                  (access) => (access.imageUrl = e.currentTarget.value),
+                  (access) =>
+                    (access.imageUrl = cleanImageRelayUrlInput(
+                      e.currentTarget.value,
+                    )),
                 )
               }
             ></input>

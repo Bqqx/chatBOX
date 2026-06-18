@@ -10,15 +10,10 @@ export function useAllModels() {
   const models = useMemo(() => {
     return collectModelsWithDefaultModel(
       configStore.models,
-      [configStore.customModels, accessStore.customModels].join(","),
+      accessStore.customModels,
       accessStore.defaultModel,
     );
-  }, [
-    accessStore.customModels,
-    accessStore.defaultModel,
-    configStore.customModels,
-    configStore.models,
-  ]);
+  }, [accessStore.customModels, accessStore.defaultModel, configStore.models]);
 
   return models;
 }
