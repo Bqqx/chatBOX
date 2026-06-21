@@ -1,0 +1,522 @@
+[Next] build mode standalone
+[Next] build with chunk:  true
+[Next] mobile static build:  false
+[Next] build mode standalone
+[Next] build with chunk:  true
+[Next] mobile static build:  false
+   ▲ Next.js 14.1.1
+   - Local:        http://localhost:3000
+   - Experiments (use at your own risk):
+     · forceSwcTransforms
+
+ ✓ Ready in 3s
+ ○ Compiling / ...
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:06:29
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:06:39
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[deepseek Route] params  { provider: 'deepseek', path: [ 'v1', 'chat', 'completions' ] }
+[DeepSeek Route] params  { provider: 'deepseek', path: [ 'v1', 'chat', 'completions' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:08:00
+[Auth] use user api key
+[Proxy]  /v1/chat/completions
+[Base Url] https://api.deepseek.com
+[deepseek Route] params  { provider: 'deepseek', path: [ 'v1', 'chat', 'completions' ] }
+[DeepSeek Route] params  { provider: 'deepseek', path: [ 'v1', 'chat', 'completions' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:08:07
+[Auth] use user api key
+[Proxy]  /v1/chat/completions
+[Base Url] https://api.deepseek.com
+[deepseek Route] params  { provider: 'deepseek', path: [ 'v1', 'chat', 'completions' ] }
+[DeepSeek Route] params  { provider: 'deepseek', path: [ 'v1', 'chat', 'completions' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:08:07
+[Auth] use user api key
+[Proxy]  /v1/chat/completions
+[Base Url] https://api.deepseek.com
+[proxy Route] params  { provider: 'proxy', path: [ 'v1', 'chat', 'completions' ] }
+[Proxy Route] params  { provider: 'proxy', path: [ 'v1', 'chat', 'completions' ] }
+[Image Proxy] request {
+  method: 'POST',
+  fetchUrl: 'https://api.deepseek.com/v1/chat/completions?',
+  subpath: 'v1/chat/completions'
+}
+[Image Proxy] response { status: 200, statusText: 'OK', elapsedMs: 139 }
+[proxy Route] params  { provider: 'proxy', path: [ 'v1', 'chat', 'completions' ] }
+[Proxy Route] params  { provider: 'proxy', path: [ 'v1', 'chat', 'completions' ] }
+[Image Proxy] request {
+  method: 'POST',
+  fetchUrl: 'https://api.deepseek.com/v1/chat/completions?',
+  subpath: 'v1/chat/completions'
+}
+[Image Proxy] response { status: 200, statusText: 'OK', elapsedMs: 85 }
+[proxy Route] params  { provider: 'proxy', path: [ 'v1', 'chat', 'completions' ] }
+[Proxy Route] params  { provider: 'proxy', path: [ 'v1', 'chat', 'completions' ] }
+[Image Proxy] request {
+  method: 'POST',
+  fetchUrl: 'https://api.deepseek.com/v1/chat/completions?',
+  subpath: 'v1/chat/completions'
+}
+[Image Proxy] response { status: 200, statusText: 'OK', elapsedMs: 131 }
+[proxy Route] params  { provider: 'proxy', path: [ 'v1', 'chat', 'completions' ] }
+[Proxy Route] params  { provider: 'proxy', path: [ 'v1', 'chat', 'completions' ] }
+[Image Proxy] request {
+  method: 'POST',
+  fetchUrl: 'https://api.deepseek.com/v1/chat/completions?',
+  subpath: 'v1/chat/completions'
+}
+[Image Proxy] response { status: 200, statusText: 'OK', elapsedMs: 104 }
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:23:22
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:23:33
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:28:02
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:28:12
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:36:28
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:36:38
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[proxy Route] params  { provider: 'proxy', path: [ 'v1', 'models' ] }
+[Proxy Route] params  { provider: 'proxy', path: [ 'v1', 'models' ] }
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:37:56
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:38:06
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[proxy Route] params  { provider: 'proxy', path: [ 'v1', 'models' ] }
+[Proxy Route] params  { provider: 'proxy', path: [ 'v1', 'models' ] }
+[deepseek Route] params  { provider: 'deepseek', path: [ 'models' ] }
+[DeepSeek Route] params  { provider: 'deepseek', path: [ 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:47:10
+[Auth] use user api key
+[Proxy]  /models
+[Base Url] https://api.deepseek.com
+[deepseek Route] params  { provider: 'deepseek', path: [ 'v1', 'chat', 'completions' ] }
+[DeepSeek Route] params  { provider: 'deepseek', path: [ 'v1', 'chat', 'completions' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:49:16
+[Auth] use user api key
+[Proxy]  /v1/chat/completions
+[Base Url] https://api.deepseek.com
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:49:56
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:50:06
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:50:38
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:50:48
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:51:28
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:51:33
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:51:43
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:52:16
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:52:26
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[deepseek Route] params  { provider: 'deepseek', path: [ 'v1', 'chat', 'completions' ] }
+[DeepSeek Route] params  { provider: 'deepseek', path: [ 'v1', 'chat', 'completions' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:55:13
+[Auth] use user api key
+[Proxy]  /v1/chat/completions
+[Base Url] https://api.deepseek.com
+[deepseek Route] params  { provider: 'deepseek', path: [ 'v1', 'chat', 'completions' ] }
+[DeepSeek Route] params  { provider: 'deepseek', path: [ 'v1', 'chat', 'completions' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:55:14
+[Auth] use user api key
+[Proxy]  /v1/chat/completions
+[Base Url] https://api.deepseek.com
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:55:51
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 01:56:01
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[proxy Route] params  { provider: 'proxy', path: [ 'v1', 'models' ] }
+[Proxy Route] params  { provider: 'proxy', path: [ 'v1', 'models' ] }
+[proxy Route] params  { provider: 'proxy', path: [ 'v1', 'models' ] }
+[Proxy Route] params  { provider: 'proxy', path: [ 'v1', 'models' ] }
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 02:05:33
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 02:05:43
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 02:13:58
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 02:13:58
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 02:14:08
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 02:14:08
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 02:14:58
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[deepseek Route] params  { provider: 'deepseek', path: [ 'chat', 'completions' ] }
+[DeepSeek Route] params  { provider: 'deepseek', path: [ 'chat', 'completions' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 02:15:04
+[Auth] use user api key
+[Proxy]  /chat/completions
+[Base Url] https://api.deepseek.com
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 02:15:08
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[deepseek Route] params  { provider: 'deepseek', path: [ 'chat', 'completions' ] }
+[DeepSeek Route] params  { provider: 'deepseek', path: [ 'chat', 'completions' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 02:16:04
+[Auth] use user api key
+[Proxy]  /chat/completions
+[Base Url] https://api.deepseek.com
+[deepseek Route] params  { provider: 'deepseek', path: [ 'chat', 'completions' ] }
+[DeepSeek Route] params  { provider: 'deepseek', path: [ 'chat', 'completions' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 02:16:04
+[Auth] use user api key
+[Proxy]  /chat/completions
+[Base Url] https://api.deepseek.com
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 02:19:31
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 02:19:41
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[deepseek Route] params  { provider: 'deepseek', path: [ 'chat', 'completions' ] }
+[DeepSeek Route] params  { provider: 'deepseek', path: [ 'chat', 'completions' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 02:19:51
+[Auth] use user api key
+[Proxy]  /chat/completions
+[Base Url] https://api.deepseek.com
+[deepseek Route] params  { provider: 'deepseek', path: [ 'chat', 'completions' ] }
+[DeepSeek Route] params  { provider: 'deepseek', path: [ 'chat', 'completions' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 02:19:53
+[Auth] use user api key
+[Proxy]  /chat/completions
+[Base Url] https://api.deepseek.com
+[proxy Route] params  { provider: 'proxy', path: [ 'v1', 'images', 'generations' ] }
+[Proxy Route] params  { provider: 'proxy', path: [ 'v1', 'images', 'generations' ] }
+[Image Proxy] request {
+  method: 'POST',
+  fetchUrl: 'http://64.186.244.43:12001/v1/images/generations?',
+  subpath: 'v1/images/generations'
+}
+[Image Proxy] response { status: 200, statusText: 'OK', elapsedMs: 46713 }

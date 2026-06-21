@@ -1,0 +1,464 @@
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+<w> [webpack.cache.PackFileCacheStrategy] Skipped not serializable cache item 'Compilation/modules|javascript/auto|C:\Users\admin\Desktop\chatBOX\phone\node_modules\next\dist\build\webpack\loaders\next-flight-css-loader.js??ruleSet[1].rules[12].oneOf[9].use[0]!C:\Users\admin\Desktop\chatBOX\phone\node_modules\next\dist\build\webpack\loaders\css-loader\src\index.js??ruleSet[1].rules[12].oneOf[9].use[1]!C:\Users\admin\Desktop\chatBOX\phone\node_modules\next\dist\build\webpack\loaders\postcss-loader\src\index.js??ruleSet[1].rules[12].oneOf[9].use[2]!C:\Users\admin\Desktop\chatBOX\phone\node_modules\next\dist\build\webpack\loaders\resolve-url-loader\index.js??ruleSet[1].rules[12].oneOf[9].use[3]!C:\Users\admin\Desktop\chatBOX\phone\node_modules\next\dist\compiled\sass-loader\cjs.js??ruleSet[1].rules[12].oneOf[9].use[4]!C:\Users\admin\Desktop\chatBOX\phone\app\components\chat.module.scss|ssr': No serializer registered for Warning
+<w> while serializing webpack/lib/cache/PackFileCacheStrategy.PackContentItems -> webpack/lib/NormalModule -> Array { 1 items } -> webpack/lib/ModuleWarning -> Warning
+ ⚠ ./app/components/chat.module.scss.webpack[javascript/auto]!=!./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[11].oneOf[9].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[11].oneOf[9].use[3]!./node_modules/next/dist/build/webpack/loaders/resolve-url-loader/index.js??ruleSet[1].rules[11].oneOf[9].use[4]!./node_modules/next/dist/compiled/sass-loader/cjs.js??ruleSet[1].rules[11].oneOf[9].use[5]!./app/components/chat.module.scss
+Warning
+
+(422:3) autoprefixer: end value has mixed support, consider using flex-end instead
+
+Import trace for requested module:
+./app/components/chat.module.scss.webpack[javascript/auto]!=!./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[11].oneOf[9].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[11].oneOf[9].use[3]!./node_modules/next/dist/build/webpack/loaders/resolve-url-loader/index.js??ruleSet[1].rules[11].oneOf[9].use[4]!./node_modules/next/dist/compiled/sass-loader/cjs.js??ruleSet[1].rules[11].oneOf[9].use[5]!./app/components/chat.module.scss
+./app/components/chat.module.scss
+./app/components/chat.tsx
+./app/components/home.tsx
+
+./app/components/chat.module.scss
+Warning
+
+(422:3) autoprefixer: end value has mixed support, consider using flex-end instead
+
+Import trace for requested module:
+./app/components/chat.module.scss
+./app/components/mask.tsx
+./app/components/home.tsx
+Attempted to get item "app-config" from localStorage, but localStorage is not available.
+Attempted to get item "lang" from localStorage, but localStorage is not available.
+Attempted to get item "access-control" from localStorage, but localStorage is not available.
+Attempted to get item "mask-store" from localStorage, but localStorage is not available.
+Attempted to get item "lang" from localStorage, but localStorage is not available.
+Attempted to get item "chat-next-web-store" from localStorage, but localStorage is not available.
+Attempted to get item "image-chat-store" from localStorage, but localStorage is not available.
+Attempted to get item "chat-update" from localStorage, but localStorage is not available.
+Attempted to get item "prompt-store" from localStorage, but localStorage is not available.
+Attempted to get item "sync" from localStorage, but localStorage is not available.
+skip setItem app-config
+skip setItem access-control
+skip setItem mask-store
+skip setItem chat-next-web-store
+skip setItem image-chat-store
+skip setItem chat-update
+skip setItem prompt-store
+skip setItem sync
+Attempted to set item "app-config" in localStorage, but localStorage is not available.
+Attempted to set item "access-control" in localStorage, but localStorage is not available.
+Attempted to set item "mask-store" in localStorage, but localStorage is not available.
+Attempted to set item "chat-next-web-store" in localStorage, but localStorage is not available.
+Attempted to set item "image-chat-store" in localStorage, but localStorage is not available.
+Attempted to set item "chat-update" in localStorage, but localStorage is not available.
+Attempted to set item "prompt-store" in localStorage, but localStorage is not available.
+Attempted to set item "sync" in localStorage, but localStorage is not available.
+<w> [webpack.cache.PackFileCacheStrategy] Skipped not serializable cache item 'Compilation/modules|C:\Users\admin\Desktop\chatBOX\phone\node_modules\next\dist\build\webpack\loaders\css-loader\src\index.js??ruleSet[1].rules[11].oneOf[9].use[2]!C:\Users\admin\Desktop\chatBOX\phone\node_modules\next\dist\build\webpack\loaders\postcss-loader\src\index.js??ruleSet[1].rules[11].oneOf[9].use[3]!C:\Users\admin\Desktop\chatBOX\phone\node_modules\next\dist\build\webpack\loaders\resolve-url-loader\index.js??ruleSet[1].rules[11].oneOf[9].use[4]!C:\Users\admin\Desktop\chatBOX\phone\node_modules\next\dist\compiled\sass-loader\cjs.js??ruleSet[1].rules[11].oneOf[9].use[5]!C:\Users\admin\Desktop\chatBOX\phone\app\components\chat.module.scss': No serializer registered for Warning
+<w> while serializing webpack/lib/cache/PackFileCacheStrategy.PackContentItems -> webpack/lib/NormalModule -> Array { 1 items } -> webpack/lib/ModuleWarning -> Warning
+ ⚠ ./app/components/chat.module.scss.webpack[javascript/auto]!=!./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[11].oneOf[9].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[11].oneOf[9].use[3]!./node_modules/next/dist/build/webpack/loaders/resolve-url-loader/index.js??ruleSet[1].rules[11].oneOf[9].use[4]!./node_modules/next/dist/compiled/sass-loader/cjs.js??ruleSet[1].rules[11].oneOf[9].use[5]!./app/components/chat.module.scss
+Warning
+
+(422:3) autoprefixer: end value has mixed support, consider using flex-end instead
+
+Import trace for requested module:
+./app/components/chat.module.scss.webpack[javascript/auto]!=!./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[11].oneOf[9].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[11].oneOf[9].use[3]!./node_modules/next/dist/build/webpack/loaders/resolve-url-loader/index.js??ruleSet[1].rules[11].oneOf[9].use[4]!./node_modules/next/dist/compiled/sass-loader/cjs.js??ruleSet[1].rules[11].oneOf[9].use[5]!./app/components/chat.module.scss
+./app/components/chat.module.scss
+./app/components/chat.tsx
+./app/components/home.tsx
+
+./app/components/chat.module.scss
+Warning
+
+(422:3) autoprefixer: end value has mixed support, consider using flex-end instead
+
+Import trace for requested module:
+./app/components/chat.module.scss
+./app/components/mask.tsx
+./app/components/home.tsx
+ ⚠ ./app/components/chat.module.scss.webpack[javascript/auto]!=!./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[11].oneOf[9].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[11].oneOf[9].use[3]!./node_modules/next/dist/build/webpack/loaders/resolve-url-loader/index.js??ruleSet[1].rules[11].oneOf[9].use[4]!./node_modules/next/dist/compiled/sass-loader/cjs.js??ruleSet[1].rules[11].oneOf[9].use[5]!./app/components/chat.module.scss
+Warning
+
+(422:3) autoprefixer: end value has mixed support, consider using flex-end instead
+
+Import trace for requested module:
+./app/components/chat.module.scss.webpack[javascript/auto]!=!./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[11].oneOf[9].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[11].oneOf[9].use[3]!./node_modules/next/dist/build/webpack/loaders/resolve-url-loader/index.js??ruleSet[1].rules[11].oneOf[9].use[4]!./node_modules/next/dist/compiled/sass-loader/cjs.js??ruleSet[1].rules[11].oneOf[9].use[5]!./app/components/chat.module.scss
+./app/components/chat.module.scss
+./app/components/chat.tsx
+./app/components/home.tsx
+
+./app/components/chat.module.scss
+Warning
+
+(422:3) autoprefixer: end value has mixed support, consider using flex-end instead
+
+Import trace for requested module:
+./app/components/chat.module.scss
+./app/components/mask.tsx
+./app/components/home.tsx
+ ⚠ ./app/components/chat.module.scss.webpack[javascript/auto]!=!./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[11].oneOf[9].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[11].oneOf[9].use[3]!./node_modules/next/dist/build/webpack/loaders/resolve-url-loader/index.js??ruleSet[1].rules[11].oneOf[9].use[4]!./node_modules/next/dist/compiled/sass-loader/cjs.js??ruleSet[1].rules[11].oneOf[9].use[5]!./app/components/chat.module.scss
+Warning
+
+(422:3) autoprefixer: end value has mixed support, consider using flex-end instead
+
+Import trace for requested module:
+./app/components/chat.module.scss.webpack[javascript/auto]!=!./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[11].oneOf[9].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[11].oneOf[9].use[3]!./node_modules/next/dist/build/webpack/loaders/resolve-url-loader/index.js??ruleSet[1].rules[11].oneOf[9].use[4]!./node_modules/next/dist/compiled/sass-loader/cjs.js??ruleSet[1].rules[11].oneOf[9].use[5]!./app/components/chat.module.scss
+./app/components/chat.module.scss
+./app/components/chat.tsx
+./app/components/home.tsx
+
+./app/components/chat.module.scss
+Warning
+
+(422:3) autoprefixer: end value has mixed support, consider using flex-end instead
+
+Import trace for requested module:
+./app/components/chat.module.scss
+./app/components/mask.tsx
+./app/components/home.tsx
+ ⚠ ./app/components/chat.module.scss.webpack[javascript/auto]!=!./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[11].oneOf[9].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[11].oneOf[9].use[3]!./node_modules/next/dist/build/webpack/loaders/resolve-url-loader/index.js??ruleSet[1].rules[11].oneOf[9].use[4]!./node_modules/next/dist/compiled/sass-loader/cjs.js??ruleSet[1].rules[11].oneOf[9].use[5]!./app/components/chat.module.scss
+Warning
+
+(422:3) autoprefixer: end value has mixed support, consider using flex-end instead
+
+Import trace for requested module:
+./app/components/chat.module.scss.webpack[javascript/auto]!=!./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[11].oneOf[9].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[11].oneOf[9].use[3]!./node_modules/next/dist/build/webpack/loaders/resolve-url-loader/index.js??ruleSet[1].rules[11].oneOf[9].use[4]!./node_modules/next/dist/compiled/sass-loader/cjs.js??ruleSet[1].rules[11].oneOf[9].use[5]!./app/components/chat.module.scss
+./app/components/chat.module.scss
+./app/components/chat.tsx
+./app/components/home.tsx
+
+./app/components/chat.module.scss
+Warning
+
+(422:3) autoprefixer: end value has mixed support, consider using flex-end instead
+
+Import trace for requested module:
+./app/components/chat.module.scss
+./app/components/mask.tsx
+./app/components/home.tsx
+(node:19864) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ ./app/components/chat.module.scss
+Warning
+
+(422:3) autoprefixer: end value has mixed support, consider using flex-end instead
+
+Import trace for requested module:
+./app/components/chat.module.scss
+./app/components/image-chat.tsx
+./app/components/home.tsx
+ ⚠ ./app/components/chat.module.scss
+Warning
+
+(422:3) autoprefixer: end value has mixed support, consider using flex-end instead
+
+Import trace for requested module:
+./app/components/chat.module.scss
+./app/components/image-chat.tsx
+./app/components/home.tsx
+ ⚠ ./app/components/chat.module.scss
+Warning
+
+(422:3) autoprefixer: end value has mixed support, consider using flex-end instead
+
+Import trace for requested module:
+./app/components/chat.module.scss
+./app/components/image-chat.tsx
+./app/components/home.tsx
+Attempted to get item "app-config" from localStorage, but localStorage is not available.
+Attempted to get item "lang" from localStorage, but localStorage is not available.
+Attempted to get item "access-control" from localStorage, but localStorage is not available.
+Attempted to get item "mask-store" from localStorage, but localStorage is not available.
+Attempted to get item "lang" from localStorage, but localStorage is not available.
+Attempted to get item "chat-next-web-store" from localStorage, but localStorage is not available.
+Attempted to get item "image-chat-store" from localStorage, but localStorage is not available.
+Attempted to get item "chat-update" from localStorage, but localStorage is not available.
+Attempted to get item "prompt-store" from localStorage, but localStorage is not available.
+Attempted to get item "sync" from localStorage, but localStorage is not available.
+skip setItem app-config
+skip setItem access-control
+skip setItem mask-store
+skip setItem chat-next-web-store
+skip setItem image-chat-store
+skip setItem chat-update
+skip setItem prompt-store
+skip setItem sync
+Attempted to set item "app-config" in localStorage, but localStorage is not available.
+Attempted to set item "access-control" in localStorage, but localStorage is not available.
+Attempted to set item "mask-store" in localStorage, but localStorage is not available.
+Attempted to set item "chat-next-web-store" in localStorage, but localStorage is not available.
+Attempted to set item "image-chat-store" in localStorage, but localStorage is not available.
+Attempted to set item "chat-update" in localStorage, but localStorage is not available.
+Attempted to set item "prompt-store" in localStorage, but localStorage is not available.
+Attempted to set item "sync" in localStorage, but localStorage is not available.
+ ⚠ ./app/components/chat.module.scss
+Warning
+
+(422:3) autoprefixer: end value has mixed support, consider using flex-end instead
+
+Import trace for requested module:
+./app/components/chat.module.scss
+./app/components/image-chat.tsx
+./app/components/home.tsx
+ ⚠ ./app/components/chat.module.scss
+Warning
+
+(422:3) autoprefixer: end value has mixed support, consider using flex-end instead
+
+Import trace for requested module:
+./app/components/chat.module.scss
+./app/components/image-chat.tsx
+./app/components/home.tsx
+ ⚠ ./app/components/chat.module.scss
+Warning
+
+(422:3) autoprefixer: end value has mixed support, consider using flex-end instead
+
+Import trace for requested module:
+./app/components/chat.module.scss
+./app/components/image-chat.tsx
+./app/components/home.tsx
+ ⚠ ./app/components/chat.module.scss
+Warning
+
+(422:3) autoprefixer: end value has mixed support, consider using flex-end instead
+
+Import trace for requested module:
+./app/components/chat.module.scss
+./app/components/image-chat.tsx
+./app/components/home.tsx
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+Error: aborted
+    at abortIncoming (node:_http_server:848:17)
+    at socketOnClose (node:_http_server:842:3)
+    at Socket.emit (node:events:521:24)
+    at TCP.<anonymous> (node:net:350:12) {
+  code: 'ECONNRESET'
+}
+ ⨯ uncaughtException: Error: aborted
+    at abortIncoming (node:_http_server:848:17)
+    at socketOnClose (node:_http_server:842:3)
+    at Socket.emit (node:events:521:24)
+    at TCP.<anonymous> (node:net:350:12) {
+  code: 'ECONNRESET'
+}
+ ⨯ uncaughtException: Error: aborted
+    at abortIncoming (node:_http_server:848:17)
+    at socketOnClose (node:_http_server:842:3)
+    at Socket.emit (node:events:521:24)
+    at TCP.<anonymous> (node:net:350:12) {
+  code: 'ECONNRESET'
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}

@@ -1,0 +1,59 @@
+[START] Security scan
+[DONE] Security scan
+## ComfyUI-Manager: installing dependencies done.
+** ComfyUI startup time: 2026-06-19 14:43:57.089
+** Platform: Windows
+** Python version: 3.13.11 (tags/v3.13.11:6278944, Dec  5 2025, 16:26:58) [MSC v.1944 64 bit (AMD64)]
+** Python executable: D:\comfy\aki2\aki2\python\python.exe
+** ComfyUI Path: D:\comfy\aki2\aki2\ComfyUI
+** ComfyUI Base Folder Path: D:\comfy\aki2\aki2\ComfyUI
+** User directory: D:\comfy\aki2\aki2\ComfyUI\user
+** ComfyUI-Manager config path: D:\comfy\aki2\aki2\ComfyUI\user\__manager\config.ini
+** Log path: D:\comfy\aki2\aki2\ComfyUI\user\comfyui.log
+[38;5;141m╔══════════════════════════════════════════════════════════╗[0m
+[1m[38;5;141m║                  🍌 Banana Node Loader                   ║[0m
+[38;5;141m╚══════════════════════════════════════════════════════════╝[0m
+[38;5;153m[14:44:03][Main]   ℹ️ Banana Gemini version V0.02[0m
+[92m[14:44:03][Main]   ✅ 成功加载节点文件: Banana_Endpoint_Tester.py[0m
+[92m[14:44:03][Main]   ✅ 成功加载节点文件: Gemini_Imagen_Generator.py[0m
+[38;5;153m[14:44:03][Main]   ℹ️ 总共加载了 2 个自定义节点[0m
+[38;5;153m[14:44:03][Main]   ℹ️    - Banana Endpoint Tester (HeiHe001_BananaEndpointTesterNode)[0m
+[38;5;153m[14:44:03][Main]   ℹ️    - Banana-API-3 (HeiHe001_BananaImageNode)[0m
+[34m[ComfyUI-Easy-Use] server: [0mv1.3.4 [92mLoaded[0m
+[34m[ComfyUI-Easy-Use] web root: [0mD:\comfy\aki2\aki2\ComfyUI\custom_nodes\comfyui-easy-use\web_version/v2 [92mLoaded[0m
+[34m[ComfyUI-RMBG][0m v[93m3.0.0[0m | [93m43 nodes[0m [92mLoaded[0m
+------------------------------------------
+[34mComfyroll Studio v1.76 : [92m 175 Nodes Loaded[0m
+------------------------------------------
+** For changes, please see patch notes at https://github.com/Suzie1/ComfyUI_Comfyroll_CustomNodes/blob/main/Patch_Notes.md
+** For help, please see the wiki at https://github.com/Suzie1/ComfyUI_Comfyroll_CustomNodes/wiki
+------------------------------------------
+DWPose: Onnxruntime with acceleration providers detected
+[1;35m
+### [START] ComfyUI AlekPet Nodes [1;34mv1.1.5[0m[1;35m ###[0m
+[92mNode -> ArgosTranslateNode: [93mArgosTranslateCLIPTextEncodeNode, ArgosTranslateTextNode[0m [92m[92m[Loading][0m[0m
+[92mNode -> ChatGLMNode: [93mChatGLM4TranslateCLIPTextEncodeNode, ChatGLM4TranslateTextNode, ChatGLM4InstructNode, ChatGLM4InstructMediaNode, ChatGLMImageGenerateNode, ChatGLMVideoGenerateNode[0m [92m[92m[Loading][0m[0m
+[92mNode -> DeepTranslatorNode: [93mDeepTranslatorCLIPTextEncodeNode, DeepTranslatorTextNode[0m [92m[92m[Loading][0m[0m
+[92mNode -> ExtrasNode: [93mPreviewTextNode, HexToHueNode, ColorsCorrectNode[0m [92m[92m[Loading][0m[0m
+[92mNode -> GoogleTranslateNode: [93mGoogleTranslateCLIPTextEncodeNode, GoogleTranslateTextNode[0m [92m[92m[Loading][0m[0m
+[92mNode -> IDENode: [93mIDENode[0m [92m[92m[Loading][0m[0m
+[92mNode -> PainterNode: [93mPainterNode[0m [92m[92m[Loading][0m[0m
+[92mNode -> PoseNode: [93mPoseNode[0m [92m[92m[Loading][0m[0m
+[1;35m### [END] ComfyUI AlekPet Nodes ###[0m
+✨提示词小助手 V2.0.5 已启动
+
+[92m[rgthree-comfy] Loaded 48 magnificent nodes. 🎉[0m
+
+[33m[rgthree-comfy] ComfyUI's new Node 2.0 rendering may be incompatible with some rgthree-comfy nodes and features, breaking some rendering as well as losing the ability to access a node's properties (a vital part of many nodes). It also appears to run MUCH more slowly spiking CPU usage and causing jankiness and unresponsiveness, especially with large workflows. Personally I am not planning to use the new Nodes 2.0 and, unfortunately, am not able to invest the time to investigate and overhaul rgthree-comfy where needed. If you have issues when Nodes 2.0 is enabled, I'd urge you to switch it off as well and join me in hoping ComfyUI is not planning to deprecate the existing, stable canvas rendering all together.
+[0m
+⚡ SeedVR2 optimizations check: SageAttention ✅ | Flash Attention ❌ | Triton ✅
+💡 Optional: pip install flash-attn
+📊 Initial CUDA memory: 6.87GB free / 8.00GB total
+[34mOpenPose Editor: [92mLoaded[0m
+FETCH ComfyRegistry Data: 5/155
+FETCH ComfyRegistry Data: 10/155
+[GPT Image 2] Sending request to http://64.186.244.43:12001/v1/images/generations (/v1/images/generations) with model: 「CS」gpt-image-2, size: 1024x1024
+FETCH ComfyRegistry Data: 15/155
+FETCH ComfyRegistry Data: 20/155
+Cannot connect to comfyregistry.
+FETCH DATA from: https://raw.githubusercontent.com/ltdrdata/ComfyUI-Manager/main/custom-node-list.json [DONE]
