@@ -27,6 +27,7 @@ export enum Theme {
 }
 
 const config = getClientConfig();
+export const LOADING_BACKGROUND_IMAGE_KEY = "chatbox-loading-background-image";
 
 export const DEFAULT_CONFIG = {
   lastUpdate: Date.now(), // timestamp, to merge state
@@ -36,6 +37,7 @@ export const DEFAULT_CONFIG = {
   fontSize: 14,
   fontFamily: "",
   theme: Theme.Auto as Theme,
+  loadingBackgroundImage: "",
   tightBorder: !!config?.isApp,
   sendPreviewBubble: false,
   enableAutoGenerateTitle: true,

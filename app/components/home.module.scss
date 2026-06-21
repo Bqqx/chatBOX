@@ -504,12 +504,114 @@
 }
 
 .loading-content {
+  position: relative;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   height: 100%;
   width: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+  padding: 0;
+  box-sizing: border-box;
+  background: #071016;
+}
+
+.loading-content-compact {
+  min-height: 100%;
+}
+
+.loading-center {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  pointer-events: none;
+}
+
+.loading-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateX(-3px);
+
+  > svg {
+    width: 74px;
+    height: 74px;
+    filter: drop-shadow(0 18px 40px rgba(83, 217, 255, 0.35));
+  }
+}
+
+.loading-spinner-wrap {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-spinner {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border: 2px solid rgba(125, 244, 255, 0.24);
+  border-top-color: #7df4ff;
+  border-right-color: rgba(255, 226, 164, 0.76);
+  border-radius: 999px;
+  transform: rotate(0deg);
+  animation: loading-spinner-rotate 0.86s linear infinite;
+  box-shadow: 0 0 18px rgba(83, 217, 255, 0.22);
+}
+
+@keyframes loading-spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-visual {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  background-image: var(--chatbox-loading-bg, url("/loading-visual.svg"));
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.98;
+}
+
+@media screen and (max-width: 600px) {
+  .loading-content {
+    justify-content: center;
+  }
+
+  .loading-center {
+    gap: 20px;
+  }
+
+  .loading-logo {
+    > svg {
+      width: 68px;
+      height: 68px;
+    }
+  }
+
+  .loading-spinner-wrap {
+    width: 20px;
+    height: 20px;
+  }
+
+  .loading-visual {
+    background-position: center;
+  }
 }
 
 .rtl-screen {

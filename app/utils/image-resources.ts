@@ -41,29 +41,31 @@ export function extractImagesFromText(text: string) {
 }
 
 export function getImageResources(sessions: ImageChatSession[]) {
-  return sessions.flatMap((session) =>
-    session.messages.flatMap((message) => {
-      if (message.role !== "assistant") return [];
+  return sessions
+    .flatMap((session) =>
+      session.messages.flatMap((message) => {
+        if (message.role !== "assistant") return [];
 
-      const images = Array.from(
-        new Set([
-          ...(message.images ?? []),
-          ...extractImagesFromText(message.content),
-        ]),
-      );
+        const images = Array.from(
+          new Set([
+            ...(message.images ?? []),
+            ...extractImagesFromText(message.content),
+          ]),
+        );
 
-      return images.map((image, imageIndex) => ({
-        id: `${session.id}-${message.id}-${imageIndex}`,
-        sessionId: session.id,
-        messageId: message.id,
-        imageIndex,
-        image,
-        topic: session.topic,
-        createdAt: message.createdAt,
-        kind: "generated" as const,
-      }));
-    }),
-  );
+        return images.map((image, imageIndex) => ({
+          id: `${session.id}-${message.id}-${imageIndex}`,
+          sessionId: session.id,
+          messageId: message.id,
+          imageIndex,
+          image,
+          topic: session.topic,
+          createdAt: message.createdAt,
+          kind: "generated" as const,
+        }));
+      }),
+    )
+    .sort((a, b) => b.createdAt - a.createdAt);
 }
 
 export function getImageResourceTimeFilter(createdAt: number) {

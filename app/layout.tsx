@@ -8,6 +8,8 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { GoogleTagManager, GoogleAnalytics } from "@next/third-parties/google";
 import { getServerSideConfig } from "./config/server";
 
+const LOADING_BACKGROUND_IMAGE_KEY = "chatbox-loading-background-image";
+
 export const metadata: Metadata = {
   title: "ChatBox",
   description: "AI chat, image generation, and resources in one workspace.",
@@ -35,7 +37,7 @@ export default function RootLayout({
   const serverConfig = getServerSideConfig();
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="config" content={JSON.stringify(getClientConfig())} />
         <meta
@@ -47,6 +49,25 @@ export default function RootLayout({
           href="/site.webmanifest"
           crossOrigin="use-credentials"
         ></link>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function () {
+                try {
+                  var image = localStorage.getItem(${JSON.stringify(
+                    LOADING_BACKGROUND_IMAGE_KEY,
+                  )});
+                  if (image) {
+                    document.documentElement.style.setProperty(
+                      "--chatbox-loading-bg",
+                      "url(" + JSON.stringify(image) + ")"
+                    );
+                  }
+                } catch (error) {}
+              })();
+            `,
+          }}
+        />
         <script src="/serviceWorkerRegister.js" defer></script>
       </head>
       <body>

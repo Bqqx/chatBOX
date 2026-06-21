@@ -1,11 +1,17 @@
 package com.chatbox.phone;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.MediaStore;
 import android.util.Base64;
+
+import androidx.core.content.FileProvider;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -14,6 +20,8 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -40,6 +48,41 @@ public class ImageSaverPlugin extends Plugin {
 
                 JSObject result = new JSObject();
                 result.put("uri", uri.toString());
+                call.resolve(result);
+            } catch (Exception error) {
+                call.reject(error.getMessage(), error);
+            }
+        });
+    }
+
+    @PluginMethod
+    public void copyImage(PluginCall call) {
+        String source = call.getString("source", "");
+        String fileName = sanitizeFileName(call.getString("fileName", "image.png"));
+        String mimeType = call.getString("mimeType", "image/png");
+
+        if (source == null || source.trim().isEmpty()) {
+            call.reject("Image source is empty");
+            return;
+        }
+
+        getBridge().execute(() -> {
+            try {
+                byte[] bytes = readImageBytes(source);
+                Uri uri = writeImageToCache(bytes, fileName);
+                ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+
+                if (clipboard == null) {
+                    throw new IllegalStateException("Unable to access clipboard");
+                }
+
+                ClipData clipData = ClipData.newUri(getContext().getContentResolver(), fileName, uri);
+                clipboard.setPrimaryClip(clipData);
+                getContext().grantUriPermission(getContext().getPackageName(), uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+                JSObject result = new JSObject();
+                result.put("uri", uri.toString());
+                result.put("mimeType", mimeType);
                 call.resolve(result);
             } catch (Exception error) {
                 call.reject(error.getMessage(), error);
@@ -108,6 +151,24 @@ public class ImageSaverPlugin extends Plugin {
         }
 
         return uri;
+    }
+
+    private Uri writeImageToCache(byte[] bytes, String fileName) throws Exception {
+        File cacheDir = new File(getContext().getCacheDir(), "copied-images");
+        if (!cacheDir.exists() && !cacheDir.mkdirs()) {
+            throw new IllegalStateException("Unable to create clipboard image cache");
+        }
+
+        File imageFile = new File(cacheDir, fileName);
+        try (OutputStream output = new FileOutputStream(imageFile)) {
+            output.write(bytes);
+        }
+
+        return FileProvider.getUriForFile(
+            getContext(),
+            getContext().getPackageName() + ".fileprovider",
+            imageFile
+        );
     }
 
     private String sanitizeFileName(String fileName) {

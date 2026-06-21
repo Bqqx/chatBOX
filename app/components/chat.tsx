@@ -954,8 +954,9 @@ function _Chat() {
   const measure = useDebouncedCallback(
     () => {
       const rows = inputRef.current ? autoGrowTextArea(inputRef.current) : 1;
+      const maxInputRows = isMobileScreen ? 8 : 12;
       const inputRows = Math.min(
-        20,
+        maxInputRows,
         Math.max(2 + Number(!isMobileScreen), rows),
       );
       setInputRows(inputRows);

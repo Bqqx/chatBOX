@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="300" viewBox="0 0 560 300" fill="none">
+  <rect width="560" height="300" rx="28" fill="#071016"/>
+  <path d="M42 226C112 154 156 128 224 139C287 149 296 84 364 73C422 64 473 101 522 148" stroke="url(#lineA)" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M52 92C117 134 153 153 218 134C283 115 318 153 374 163C430 172 474 143 515 103" stroke="url(#lineB)" stroke-width="1.5" stroke-linecap="round" opacity=".8"/>
+  <g filter="url(#glow)">
+    <ellipse cx="282" cy="153" rx="92" ry="58" fill="url(#core)" opacity=".9"/>
+    <path d="M205 155C237 104 323 101 358 151C324 198 238 203 205 155Z" stroke="#8DF8FF" stroke-width="1.4" opacity=".85"/>
+    <path d="M231 154C252 126 310 124 333 152C311 181 254 183 231 154Z" stroke="#FFE2A4" stroke-width="1" opacity=".7"/>
+  </g>
+  <g opacity=".8">
+    <circle cx="158" cy="78" r="3" fill="#7DF4FF"/>
+    <circle cx="400" cy="96" r="3" fill="#FFE2A4"/>
+    <circle cx="445" cy="210" r="2.5" fill="#38D9C2"/>
+    <circle cx="111" cy="202" r="2.5" fill="#3D8BFF"/>
+  </g>
+  <g stroke="#2A5264" stroke-width="1" opacity=".38">
+    <path d="M80 48H188"/>
+    <path d="M372 252H482"/>
+    <path d="M70 252H152"/>
+    <path d="M412 48H500"/>
+  </g>
+  <defs>
+    <linearGradient id="lineA" x1="42" y1="226" x2="522" y2="148" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#143949" stop-opacity="0"/>
+      <stop offset=".32" stop-color="#5DE7FF"/>
+      <stop offset=".72" stop-color="#FFE1A1"/>
+      <stop offset="1" stop-color="#143949" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="lineB" x1="52" y1="92" x2="515" y2="103" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#143949" stop-opacity="0"/>
+      <stop offset=".38" stop-color="#2C83FF"/>
+      <stop offset=".68" stop-color="#61E7D0"/>
+      <stop offset="1" stop-color="#143949" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="core" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(282 153) rotate(90) scale(62 100)">
+      <stop stop-color="#E8FBFF"/>
+      <stop offset=".42" stop-color="#53D9FF" stop-opacity=".68"/>
+      <stop offset="1" stop-color="#10212D" stop-opacity=".08"/>
+    </radialGradient>
+    <filter id="glow" x="160" y="64" width="244" height="176" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+  </defs>
+</svg>

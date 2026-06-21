@@ -5,8 +5,7 @@ require("../polyfill");
 import { useEffect, useState } from "react";
 import styles from "./home.module.scss";
 
-import BotIcon from "../icons/bot.svg";
-import LoadingIcon from "../icons/three-dots.svg";
+import ChatBoxLogoIcon from "../icons/chatbox-logo.svg";
 
 import { getCSSVar, useMobileScreen } from "../utils";
 
@@ -32,10 +31,23 @@ import clsx from "clsx";
 import { initializeMcpSystem, isMcpEnabled } from "../mcp/actions";
 
 export function Loading(props: { noLogo?: boolean }) {
+  if (props.noLogo) return null;
+
   return (
-    <div className={clsx("no-dark", styles["loading-content"])}>
-      {!props.noLogo && <BotIcon />}
-      <LoadingIcon />
+    <div
+      className={clsx("no-dark", styles["loading-content"], {
+        [styles["loading-content-compact"]]: props.noLogo,
+      })}
+    >
+      <div className={styles["loading-visual"]} aria-hidden="true" />
+      <div className={styles["loading-center"]}>
+        <div className={clsx("no-dark", styles["loading-logo"])}>
+          <ChatBoxLogoIcon />
+        </div>
+        <div className={styles["loading-spinner-wrap"]} aria-label="Loading">
+          <div className={styles["loading-spinner"]} />
+        </div>
+      </div>
     </div>
   );
 }
@@ -254,6 +266,8 @@ export function Home() {
   useSwitchTheme();
   useLoadData();
   useHtmlLang();
+  const hasHydrated = useHasHydrated();
+  const [splashDone, setSplashDone] = useState(false);
 
   useEffect(() => {
     console.log("[Config] got config from build time", getClientConfig());
@@ -274,7 +288,12 @@ export function Home() {
     initMcp();
   }, []);
 
-  if (!useHasHydrated()) {
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSplashDone(true), 2000);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  if (!hasHydrated || !splashDone) {
     return <Loading />;
   }
 

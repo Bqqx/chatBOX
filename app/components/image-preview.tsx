@@ -9,7 +9,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { Clipboard } from "@capacitor/clipboard";
 import { Capacitor, registerPlugin } from "@capacitor/core";
 
 import { ImageResource } from "../utils/image-resources";
@@ -19,6 +18,11 @@ import styles from "./image-preview.module.scss";
 
 interface ImageSaverPlugin {
   saveImage(options: {
+    source: string;
+    fileName: string;
+    mimeType: string;
+  }): Promise<{ uri: string }>;
+  copyImage(options: {
     source: string;
     fileName: string;
     mimeType: string;
@@ -127,24 +131,13 @@ async function convertBlobToPng(blob: Blob) {
   });
 }
 
-function blobToDataUrl(blob: Blob) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(blob);
-  });
-}
-
 export async function copyImage(resource: ImageResource) {
   if (Capacitor.isNativePlatform()) {
     try {
-      const imageDataUrl = resource.image.startsWith("data:")
-        ? resource.image
-        : await blobToDataUrl(await getImageBlob(resource.image));
-      await Clipboard.write({
-        image: imageDataUrl,
-        label: getImageFileName(resource),
+      await ImageSaver.copyImage({
+        source: resource.image,
+        fileName: getImageFileName(resource),
+        mimeType: getImageMimeType(resource.image),
       });
       showToast("已复制图片");
       return;

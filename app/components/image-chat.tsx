@@ -24,7 +24,7 @@ import {
   useAccessStore,
   useImageChatStore,
 } from "../store";
-import { copyToClipboard, useMobileScreen } from "../utils";
+import { autoGrowTextArea, copyToClipboard, useMobileScreen } from "../utils";
 import { compressImage } from "../utils/chat";
 import { ImagePreviewModal } from "./image-preview";
 import { Modal, showPrompt, showToast } from "./ui-lib";
@@ -33,6 +33,7 @@ import {
   ensureCompletionNotificationPermission,
   notifyCompletionWhenBackground,
 } from "../utils/native-notifications";
+import { Capacitor, CapacitorHttp } from "@capacitor/core";
 
 import ReturnIcon from "../icons/return.svg";
 import SendWhiteIcon from "../icons/send-white.svg";
@@ -856,8 +857,15 @@ function getErrorMessage(error: unknown) {
   if (error instanceof DOMException && error.name === "AbortError") {
     return "生成超时，请稍后重试或降低图片分辨率";
   }
-  if (error instanceof Error) return error.message;
-  return String(error);
+  const message = error instanceof Error ? error.message : String(error);
+  if (
+    /Software caused connection abort/i.test(message) ||
+    /failed to connect .* after \d+ms/i.test(message) ||
+    /Read timed out/i.test(message)
+  ) {
+    return `LOCAL_NETWORK_ERROR: ${message}`;
+  }
+  return message;
 }
 
 function clampImageCount(value: number) {
@@ -896,6 +904,8 @@ function ImageCountStepper(props: {
 
 const RETRYABLE_STATUS = new Set([408, 409, 425, 429, 500, 502, 503, 504]);
 const IMAGE_REQUEST_TIMEOUT_MS = 300000;
+const IMAGE_NATIVE_READ_TIMEOUT_MS = 10 * 60 * 1000;
+const IMAGE_NATIVE_CONNECT_TIMEOUT_MS = 5 * 60 * 1000;
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -914,6 +924,13 @@ async function fetchWithTimeout(url: string, options: RequestInit) {
     window.clearTimeout(timeout);
   }
 }
+
+type JsonResponse = {
+  ok: boolean;
+  status: number;
+  url: string;
+  json: any;
+};
 
 async function readResponseJson(response: Response) {
   const text = await response.text();
@@ -941,24 +958,95 @@ async function readResponseJson(response: Response) {
   }
 }
 
+async function postJsonNative(
+  requestUrl: string,
+  headers: Record<string, string>,
+  payload: unknown,
+): Promise<JsonResponse> {
+  const response = await CapacitorHttp.request({
+    method: "POST",
+    url: requestUrl,
+    headers,
+    data: payload,
+    connectTimeout: IMAGE_NATIVE_CONNECT_TIMEOUT_MS,
+    readTimeout: IMAGE_NATIVE_READ_TIMEOUT_MS,
+  });
+
+  const contentType =
+    response.headers?.["content-type"] ??
+    response.headers?.["Content-Type"] ??
+    "";
+  const rawData = response.data;
+  let json: any = {};
+
+  if (typeof rawData === "string") {
+    if (
+      contentType.includes("text/html") ||
+      /^\s*<!doctype\s+html/i.test(rawData) ||
+      /^\s*<html[\s>]/i.test(rawData)
+    ) {
+      json = {
+        message: rawData,
+        htmlResponse: true,
+        status: response.status,
+        url: response.url ?? requestUrl,
+      };
+    } else {
+      try {
+        json = rawData ? JSON.parse(rawData) : {};
+      } catch {
+        json = { message: rawData };
+      }
+    }
+  } else {
+    json = rawData ?? {};
+  }
+
+  return {
+    ok: response.status >= 200 && response.status < 300,
+    status: response.status,
+    url: response.url ?? requestUrl,
+    json,
+  };
+}
+
+async function postJsonBrowser(
+  requestUrl: string,
+  headers: Record<string, string>,
+  payload: unknown,
+): Promise<JsonResponse> {
+  const response = await fetchWithTimeout(requestUrl, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload),
+  });
+  const json = await readResponseJson(response);
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    url: response.url,
+    json,
+  };
+}
+
 async function postJsonWithRetry(
   requestUrl: string,
   headers: Record<string, string>,
   payload: unknown,
   options: { maxAttempts?: number } = {},
 ) {
-  const requestOptions = {
-    method: "POST",
-    headers,
-    body: JSON.stringify(payload),
-  };
-
   const maxAttempts = options.maxAttempts ?? 2;
   let json: any = {};
-  let response: Response | undefined;
+  let response: JsonResponse | undefined;
+  const useNativeHttp =
+    Capacitor.isNativePlatform() && /^https?:\/\//i.test(requestUrl);
+
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-    response = await fetchWithTimeout(requestUrl, requestOptions);
-    json = await readResponseJson(response);
+    response = useNativeHttp
+      ? await postJsonNative(requestUrl, headers, payload)
+      : await postJsonBrowser(requestUrl, headers, payload);
+    json = response.json;
 
     if (
       !response.ok &&
@@ -1011,6 +1099,7 @@ export function ImageChat() {
     : "Nanobanana";
 
   const [prompt, setPrompt] = useState("");
+  const [inputRows, setInputRows] = useState(2);
   const [engine, setEngine] = useState<ImageEngine>(savedEngine);
   const [model, setModel] = useState(
     getStoredImageModel(accessStore, savedEngine),
@@ -1033,6 +1122,7 @@ export function ImageChat() {
   const favoritePrompts = imageChatStore.favoritePrompts ?? [];
   const showMobileDetail =
     !isMobileScreen || (location.state as { showDetail?: boolean })?.showDetail;
+  const imageSettingsSummary = `${engine} / ${size || "原图比例"} / ${count}张`;
   const renderedMessages = useMemo(
     () =>
       messages.map((message) => {
@@ -1268,6 +1358,22 @@ export function ImageChat() {
     element.style.height = "0px";
     element.style.height = `${Math.min(element.scrollHeight, 180)}px`;
   }
+
+  const resizePromptInput = useCallback(
+    (element = inputRef.current) => {
+      if (!element) return;
+      const rows = autoGrowTextArea(element);
+      const maxInputRows = isMobileScreen ? 8 : 12;
+      setInputRows(
+        Math.min(maxInputRows, Math.max(2 + Number(!isMobileScreen), rows)),
+      );
+    },
+    [isMobileScreen],
+  );
+
+  useEffect(() => {
+    resizePromptInput();
+  }, [prompt, resizePromptInput]);
 
   function openFavoritePrompts() {
     setFavoritePromptDraft("");
@@ -1818,7 +1924,12 @@ export function ImageChat() {
                       setShowImageSettings((value) => !value);
                     }}
                   >
-                    <span>生图设置</span>
+                    <span className={styles["image-settings-title"]}>
+                      生图设置
+                    </span>
+                    <span className={styles["image-settings-summary"]}>
+                      {imageSettingsSummary}
+                    </span>
                     <span className={styles["image-settings-arrow"]}>
                       {showImageSettings ? "^" : "v"}
                     </span>
@@ -1861,24 +1972,29 @@ export function ImageChat() {
                           onDelete={deleteModelOption}
                         />
                       </label>
+                      <div className={styles["image-settings-row"]}>
+                        <label className={styles.option}>
+                          <span>{Locale.ImageChat.Size}</span>
+                          <ModelSelector
+                            value={size}
+                            options={IMAGE_RATIO_OPTIONS}
+                            placeholder="1:1"
+                            displayNames={{ "": "原图比例" }}
+                            ariaLabel={Locale.ImageChat.Size}
+                            onSelect={setSize}
+                          />
+                        </label>
+                        <label className={styles.option}>
+                          <span>{Locale.ImageChat.Count}</span>
+                          <ImageCountStepper
+                            value={count}
+                            onChange={setCount}
+                          />
+                        </label>
+                      </div>
                     </div>
                   )}
                 </div>
-                <label className={styles.option}>
-                  <span>{Locale.ImageChat.Size}</span>
-                  <ModelSelector
-                    value={size}
-                    options={IMAGE_RATIO_OPTIONS}
-                    placeholder="1:1"
-                    displayNames={{ "": "原图比例" }}
-                    ariaLabel={Locale.ImageChat.Size}
-                    onSelect={setSize}
-                  />
-                </label>
-                <label className={styles.option}>
-                  <span>{Locale.ImageChat.Count}</span>
-                  <ImageCountStepper value={count} onChange={setCount} />
-                </label>
               </div>
               <div
                 className={clsx(
@@ -1928,7 +2044,7 @@ export function ImageChat() {
                   className={chatStyles["chat-input"]}
                   placeholder={Locale.ImageChat.Prompt}
                   value={prompt}
-                  rows={3}
+                  rows={inputRows}
                   onChange={(e) => setPrompt(e.currentTarget.value)}
                   onPaste={handlePasteImage}
                   onKeyDown={(e) => {

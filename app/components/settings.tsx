@@ -25,6 +25,7 @@ import {
   PasswordInput,
   Select,
   showConfirm,
+  showToast,
 } from "./ui-lib";
 import { ModelConfigList } from "./model-config";
 
@@ -45,6 +46,8 @@ import Locale, {
   getLang,
 } from "../locales";
 import { copyToClipboard } from "../utils";
+import { compressImage } from "../utils/chat";
+import { LOADING_BACKGROUND_IMAGE_KEY } from "../store/config";
 import {
   Anthropic,
   Azure,
@@ -566,6 +569,43 @@ export function Settings() {
     subscription: updateStore.subscription,
   };
   const [loadingUsage, setLoadingUsage] = useState(false);
+
+  function syncLoadingBackgroundImage(image: string) {
+    if (image) {
+      localStorage.setItem(LOADING_BACKGROUND_IMAGE_KEY, image);
+      document.documentElement.style.setProperty(
+        "--chatbox-loading-bg",
+        `url(${JSON.stringify(image)})`,
+      );
+    } else {
+      localStorage.removeItem(LOADING_BACKGROUND_IMAGE_KEY);
+      document.documentElement.style.removeProperty("--chatbox-loading-bg");
+    }
+  }
+
+  function chooseLoadingBackgroundImage() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      try {
+        const image = await compressImage(file, 1024 * 1024);
+        syncLoadingBackgroundImage(image);
+        updateConfig((config) => {
+          config.loadingBackgroundImage = image;
+        });
+        showToast("已更新启动页背景图");
+      } catch (error) {
+        console.warn("[Settings] failed to update loading background", error);
+        showToast("背景图上传失败");
+      }
+    };
+    input.click();
+  }
+
   function checkUsage(force = false) {
     if (shouldHideBalanceQuery) {
       return;
@@ -1552,6 +1592,32 @@ export function Settings() {
                 </option>
               ))}
             </Select>
+          </ListItem>
+
+          <ListItem
+            title="启动页背景图"
+            subTitle="建议使用 560x300 或 28:15 比例图片；所有设备都会居中裁切并撑满页面。"
+          >
+            <div className={styles["loading-background-actions"]}>
+              <IconButton
+                aria="上传启动页背景图"
+                icon={<UploadIcon />}
+                text="上传"
+                onClick={chooseLoadingBackgroundImage}
+              />
+              <IconButton
+                aria="恢复默认启动页背景图"
+                icon={<ResetIcon />}
+                text="默认"
+                onClick={() => {
+                  updateConfig((config) => {
+                    config.loadingBackgroundImage = "";
+                  });
+                  syncLoadingBackgroundImage("");
+                  showToast("已恢复默认启动页背景图");
+                }}
+              />
+            </div>
           </ListItem>
 
           <ListItem title={Locale.Settings.Lang.Name}>

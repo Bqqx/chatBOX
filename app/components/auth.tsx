@@ -7,9 +7,8 @@ import { useAccessStore } from "../store";
 import Locale from "../locales";
 import Delete from "../icons/close.svg";
 import Arrow from "../icons/arrow.svg";
-import Logo from "../icons/logo.svg";
 import { useMobileScreen } from "@/app/utils";
-import BotIcon from "../icons/bot.svg";
+import ChatBoxLogoIcon from "../icons/chatbox-logo.svg";
 import { getClientConfig } from "../config/client";
 import { PasswordInput } from "./ui-lib";
 import LeftIcon from "@/app/icons/left.svg";
@@ -57,7 +56,7 @@ export function AuthPage() {
         ></IconButton>
       </div>
       <div className={clsx("no-dark", styles["auth-logo"])}>
-        <BotIcon />
+        <ChatBoxLogoIcon />
       </div>
 
       <div className={styles["auth-title"]}>{Locale.Auth.Title}</div>
@@ -166,7 +165,9 @@ function TopBanner() {
       onMouseLeave={handleMouseLeave}
     >
       <div className={clsx(styles["top-banner-inner"], "no-dark")}>
-        <Logo className={styles["top-banner-logo"]}></Logo>
+        <ChatBoxLogoIcon
+          className={styles["top-banner-logo"]}
+        ></ChatBoxLogoIcon>
         <span>
           {Locale.Auth.TopTips}
           <a
