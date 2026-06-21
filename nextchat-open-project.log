@@ -520,3 +520,25 @@ fetchUrl https://api.openai.com/v1/models
   subpath: 'v1/images/generations'
 }
 [Image Proxy] response { status: 200, statusText: 'OK', elapsedMs: 46713 }
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 02:27:18
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models
+[openai Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[OpenAI Route] params  { provider: 'openai', path: [ 'v1', 'models' ] }
+[Auth] allowed hashed codes:  []
+[Auth] got access code: 
+[Auth] hashed access code: d41d8cd98f00b204e9800998ecf8427e
+[User IP]  ::ffff:127.0.0.1
+[Time]  2026/6/22 02:27:28
+[Auth] admin did not provide an api key
+[Proxy]  v1/models
+[Base Url] https://api.openai.com
+fetchUrl https://api.openai.com/v1/models

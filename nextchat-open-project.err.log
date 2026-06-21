@@ -462,3 +462,17 @@ Error: aborted
   message: 'Connect Timeout Error'
 }
 }
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
+[OpenAI]   [TypeError: fetch failed] {
+  cause:  [ConnectTimeoutError: Connect Timeout Error] {
+  name: 'ConnectTimeoutError',
+  code: 'UND_ERR_CONNECT_TIMEOUT',
+  message: 'Connect Timeout Error'
+}
+}
